@@ -13,17 +13,34 @@ namespace tamagotchi_authorization.Controllers
         [HttpPost("token")]
         public IActionResult Token()
         {
-            var claims = new[] { new Claim(ClaimTypes.Name, "userName") };
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("TamagochiSecretKey"));
-            var signInCredential = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
-            var token = new JwtSecurityToken(
-                issuer: "tamagochi.com",
-                audience: "tamagochi.com",
-                expires: DateTime.Now.AddMinutes(1),
-                claims: claims,
-                signingCredentials: signInCredential
-                );
-            return Ok(new JwtSecurityTokenHandler().WriteToken(token));
+            var header = Request.Headers["Authorization"].ToString();
+            if (header.StartsWith("Basic"))
+            {
+                var credentialValue = header.Substring("Basic ".Length).Trim();
+                var userNameAndPassEnc = Encoding.UTF8.GetString(Convert.FromBase64String(credentialValue)); // admin:pass
+                var userNameAndPass = userNameAndPassEnc.Split(":");
+                // TODO: check DB username and pass
+                //test
+                if (userNameAndPass[0] == "Admin" && userNameAndPass[1] == "pass")
+                {
+                    var claims = new[] { new Claim(ClaimTypes.Name, userNameAndPass[0]) };
+                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Scope.SecurityKey));
+                    var signInCredential = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+                    var token = new JwtSecurityToken(
+                        issuer: Scope.BaseURL,
+                        audience: Scope.BaseURL,
+                        expires: DateTime.Now.AddMinutes(1),
+                        claims: claims,
+                        signingCredentials: signInCredential
+                        );
+                    return Ok(new JwtSecurityTokenHandler().WriteToken(token));
+                }
+                else
+                    return BadRequest("Auth failed");
+                
+            }
+            return BadRequest("Wrong request");
+
         }
     }
 }
