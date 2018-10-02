@@ -26,5 +26,7 @@ namespace tamagotchi_authorization.Core
                 return null;
             }
         }
+        public User GetUserByEMail(string email) =>
+            TestUsers.FirstOrDefault(user => user.Email.Equals(email));
     }
 }
