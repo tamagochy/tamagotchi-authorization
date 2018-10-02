@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
+﻿
 namespace tamagotchi_authorization
 {
     /// <summary>
@@ -12,5 +8,7 @@ namespace tamagotchi_authorization
     {
         public const string BaseURL = "tamagotchi.com";
         public const string SecurityKey = "TamagochiSecretKey";
+        //Время жизни токена в часах
+        public const int LifeTime = 24;
     }
 }
