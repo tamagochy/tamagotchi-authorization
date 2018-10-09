@@ -16,7 +16,7 @@ namespace tamagotchi_authorization.Controllers
         {
             _userRepository = new UserRepository();
         }
-        [HttpPost("token")]
+        [HttpPost("Token")]
         public IActionResult Login([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
@@ -32,7 +32,7 @@ namespace tamagotchi_authorization.Controllers
             return Ok(JwtHelper.GenerateToken(login));
         }
 
-        [HttpPost("registration")]
+        [HttpPost("Registration")]
         public IActionResult Registration([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
@@ -53,7 +53,7 @@ namespace tamagotchi_authorization.Controllers
 
         #region Access Recovery
 
-        [HttpPost("send_page_access")]
+        [HttpPost("SendPageAccess")]
         public IActionResult SendMailWithPageAccess([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
@@ -91,7 +91,7 @@ namespace tamagotchi_authorization.Controllers
             await smtp.SendMailAsync(message);
         }
 
-        [HttpPost("password_recovery")]
+        [HttpPost("PasswordRecovery")]
         public IActionResult RecoveryPassword([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];

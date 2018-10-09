@@ -3,7 +3,7 @@ info:
   version: v1
   title: TamagotchiAuth
 paths:
-  /Auth/token:
+  /Auth/Token:
     post:
       tags:
         - Auth
@@ -23,7 +23,7 @@ paths:
       responses:
         '200':
           description: Success
-  /Auth/registration:
+  /Auth/Registration:
     post:
       tags:
         - Auth
@@ -43,11 +43,11 @@ paths:
       responses:
         '200':
           description: Success
-  /Auth/send_page_access:
+  /Auth/SendPageAccess:
     post:
       tags:
         - Auth
-      operationId: AuthSend_page_accessPost
+      operationId: AuthSendPageAccessPost
       consumes:
         - application/json-patch+json
         - application/json
@@ -63,11 +63,11 @@ paths:
       responses:
         '200':
           description: Success
-  /Auth/password_recovery:
+  /Auth/PasswordRecovery:
     post:
       tags:
         - Auth
-      operationId: AuthPassword_recoveryPost
+      operationId: AuthPasswordRecoveryPost
       consumes:
         - application/json-patch+json
         - application/json
