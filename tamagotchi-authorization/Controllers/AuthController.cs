@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Text;
-using System.IdentityModel.Tokens.Jwt;
 using System;
-using tamagotchi_authorization.Models;
 using tamagotchi_authorization.Core;
-using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+using System.Net.Mail;
+using System.Net;
 
 namespace tamagotchi_authorization.Controllers
 {
@@ -53,5 +50,64 @@ namespace tamagotchi_authorization.Controllers
             //TODO: add user to db
             return Ok();
         }
+
+        #region Access Recovery
+
+        [HttpPost("send_page_access")]
+        public IActionResult SendMailWithPageAccess([FromBody] JObject jsonBody)
+        {
+            var login = (string)jsonBody["login"];
+            var pageAccessAddress = (string)jsonBody["pageAccess"];
+            if (login == null || pageAccessAddress == null)
+                return BadRequest("Отсутсвует один из параметров запроса (Internal error).");
+            var user = _userRepository.GetUser(login);
+            if (user == null)
+                return BadRequest("Пользователь отсутствует в системе.");
+            try
+            {
+                SendEmailAsync(user.Email, pageAccessAddress).GetAwaiter();
+            }
+            catch (Exception exception)
+            {
+                return BadRequest(exception.Message);
+            }
+            return Ok();
+        }
+
+        private static async Task SendEmailAsync(string userMail, string pageAccess)
+        {
+            var from = new MailAddress(Scope.ApplicationMail);
+            var to = new MailAddress(userMail);
+            var message = new MailMessage(from, to)
+            {
+                Subject = "Восстановление доступа",
+                Body = "Вы хотите восстановить пароль доступа.\nПожалуйста, посетите страницу восстановления:\n" + pageAccess 
+            };
+            var smtp = new SmtpClient("smtp.gmail.com", 587)
+            {
+                Credentials = new NetworkCredential(Scope.ApplicationMail, Scope.MailPassword),
+                EnableSsl = true
+            };
+            await smtp.SendMailAsync(message);
+        }
+
+        [HttpPost("password_recovery")]
+        public IActionResult RecoveryPassword([FromBody] JObject jsonBody)
+        {
+            var login = (string)jsonBody["login"];
+            var newPassword = (string)jsonBody["newPassword"];
+            if (login == null || newPassword == null)
+                return BadRequest("Отсутсвует один из параметров запроса (Internal error).");
+            var user = _userRepository.GetUser(login);
+            if (user == null)
+                return BadRequest("Пользователь отсутствует в системе.");
+            //TODO: update user password in db 
+            //_userRepository.Entry(user).State = EntityState.Modified;
+            //user.Password = newPassword;
+            //_userRepository.SaveChanges();
+            return Ok();
+        }
+
+        #endregion
     }
 }
