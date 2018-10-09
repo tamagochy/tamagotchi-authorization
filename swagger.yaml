@@ -1,0 +1,86 @@
+swagger: '2.0'
+info:
+  version: v1
+  title: TamagotchiAuth
+paths:
+  /Auth/token:
+    post:
+      tags:
+        - Auth
+      operationId: AuthTokenPost
+      consumes:
+        - application/json-patch+json
+        - application/json
+        - text/json
+        - application/*+json
+      produces: []
+      parameters:
+        - name: jsonBody
+          in: body
+          required: false
+          schema:
+            type: object
+      responses:
+        '200':
+          description: Success
+  /Auth/registration:
+    post:
+      tags:
+        - Auth
+      operationId: AuthRegistrationPost
+      consumes:
+        - application/json-patch+json
+        - application/json
+        - text/json
+        - application/*+json
+      produces: []
+      parameters:
+        - name: jsonBody
+          in: body
+          required: false
+          schema:
+            type: object
+      responses:
+        '200':
+          description: Success
+  /Auth/send_page_access:
+    post:
+      tags:
+        - Auth
+      operationId: AuthSend_page_accessPost
+      consumes:
+        - application/json-patch+json
+        - application/json
+        - text/json
+        - application/*+json
+      produces: []
+      parameters:
+        - name: jsonBody
+          in: body
+          required: false
+          schema:
+            type: object
+      responses:
+        '200':
+          description: Success
+  /Auth/password_recovery:
+    post:
+      tags:
+        - Auth
+      operationId: AuthPassword_recoveryPost
+      consumes:
+        - application/json-patch+json
+        - application/json
+        - text/json
+        - application/*+json
+      produces: []
+      parameters:
+        - name: jsonBody
+          in: body
+          required: false
+          schema:
+            type: object
+      responses:
+        '200':
+          description: Success
+definitions: {}

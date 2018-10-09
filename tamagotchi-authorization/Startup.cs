@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace tamagotchi_authorization
 {
@@ -50,6 +51,10 @@ namespace tamagotchi_authorization
                             ValidateIssuerSigningKey = true,
                       };
                   });
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = "TamagotchiAuth", Version = "v1" });
+            });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -59,6 +64,14 @@ namespace tamagotchi_authorization
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseMvc();
+            // Enable middleware to serve generated Swagger as a JSON endpoint
+            app.UseSwagger();
+            //Enable middleware to serve swagger - ui assets(HTML, JS, CSS etc.)
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");
+                options.RoutePrefix = "/swagger";
+            });
         }
     }
 }
