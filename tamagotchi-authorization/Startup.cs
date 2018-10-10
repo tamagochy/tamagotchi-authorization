@@ -35,25 +35,21 @@ namespace tamagotchi_authorization
                       options.RequireHttpsMetadata = false;
                       options.TokenValidationParameters = new TokenValidationParameters
                       {
-                            // укзывает, будет ли валидироваться издатель при валидации токена
-                            ValidateIssuer = true,
-                            // строка, представляющая издателя
-                            ValidIssuer = Scope.BaseURL,
-                            // будет ли валидироваться потребитель токена
-                            ValidateAudience = true,
-                            // установка потребителя токена
-                            ValidAudience = Scope.BaseURL,
-                            // будет ли валидироваться время существования
-                            ValidateLifetime = true,
-                            // установка ключа безопасности
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Scope.SecurityKey)),
-                            // валидация ключа безопасности
-                            ValidateIssuerSigningKey = true,
+                          // будет ли валидироваться время существования
+                          ValidateLifetime = true,
+                          // установка ключа безопасности
+                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Scope.SecurityKey)),
+                          // валидация ключа безопасности
+                          ValidateIssuerSigningKey = true,
                       };
                   });
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "TamagotchiAuth", Version = "v1" });
+                c.SwaggerDoc("v1", new Info
+                {
+                    Title = "TamagotchiAuth",
+                    Version = "v1"                    
+                });
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
@@ -63,6 +59,7 @@ namespace tamagotchi_authorization
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
+            app.UseDeveloperExceptionPage();
             app.UseMvc();
             // Enable middleware to serve generated Swagger as a JSON endpoint
             app.UseSwagger();

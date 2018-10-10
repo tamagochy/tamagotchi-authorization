@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using tamagotchi_authorization.Core;
+using tamagotchi_authorization.Helpers;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using System.Net.Mail;
 using System.Net;
+using tamagotchi_authorization.Core;
 
 namespace tamagotchi_authorization.Controllers
 {
@@ -17,61 +18,61 @@ namespace tamagotchi_authorization.Controllers
             _userRepository = new UserRepository();
         }
         [HttpPost("Token")]
-        public IActionResult Login([FromBody] JObject jsonBody)
+        public ApiResult<string> Login([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
             var password = (string)jsonBody["password"];
             if (login == null || password == null)
-                return BadRequest("Отсутсвует один из параметров запроса (Internal error).");
+                new ApiResult<string>(new Error { Message = "Отсутсвует один из параметров запроса (Internal error)." });
             var user = _userRepository.GetUser(login);
             if (user == null)
-                return NotFound("Логин не найден в системе.");
+                new ApiResult<string>(new Error { Message = "Логин не найден в системе." });
             var credentials = user.Password.Equals(password);
             if (!credentials)
-                return BadRequest("Ошибка авторизации. Неверный пароль.");
-            return Ok(JwtHelper.GenerateToken(login));
+                new ApiResult<string>(new Error { Message = "Ошибка авторизации. Неверный пароль." });
+            return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId));
         }
 
         [HttpPost("Registration")]
-        public IActionResult Registration([FromBody] JObject jsonBody)
+        public ApiResult<string> Registration([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
             var password = (string)jsonBody["password"];
             var passwordConfirmation = (string)jsonBody["passwordConfirm"];
             var email = (string)jsonBody["email"];
             if (login == null || password == null || passwordConfirmation == null || email == null)
-                return BadRequest("Отсутсвует один из параметров запроса (Internal error).");
+                return new ApiResult<string>(new Error { Message = "Отсутсвует один из параметров запроса (Internal error)." });
             if (!password.Equals(passwordConfirmation))
-                return BadRequest("Пароли не совпадают.");
+                return new ApiResult<string>(new Error { Message = "Пароли не совпадают." });
             if (_userRepository.GetUserByEMail(email) != null)
-                return BadRequest("Пользователь с указанным адресом электронной почты уже существует.");
+                return new ApiResult<string>(new Error { Message = "Пользователь с указанным адресом электронной почты уже существует." });
             if (_userRepository.GetUser(login) != null)
-                return BadRequest("Указанный логин уже существует, попробуйте использовать другой.");
+                return new ApiResult<string>(new Error { Message = "Указанный логин уже существует, попробуйте использовать другой." });
             //TODO: add user to db
-            return Ok();
+            return new ApiResult<string>("Ok");
         }
 
         #region Access Recovery
 
         [HttpPost("SendPageAccess")]
-        public IActionResult SendMailWithPageAccess([FromBody] JObject jsonBody)
+        public ApiResult<string> SendMailWithPageAccess([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
             var pageAccessAddress = (string)jsonBody["pageAccess"];
             if (login == null || pageAccessAddress == null)
-                return BadRequest("Отсутсвует один из параметров запроса (Internal error).");
+                return new ApiResult<string>(new Error { Message = "Отсутсвует один из параметров запроса (Internal error)." });
             var user = _userRepository.GetUser(login);
             if (user == null)
-                return BadRequest("Пользователь отсутствует в системе.");
+                return new ApiResult<string>(new Error { Message = "Пользователь отсутствует в системе." });
             try
             {
                 SendEmailAsync(user.Email, pageAccessAddress).GetAwaiter();
             }
             catch (Exception exception)
             {
-                return BadRequest(exception.Message);
+                return new ApiResult<string>(new Error { Message = exception.Message });
             }
-            return Ok();
+            return new ApiResult<string>("Ok");
         }
 
         private static async Task SendEmailAsync(string userMail, string pageAccess)
@@ -92,20 +93,20 @@ namespace tamagotchi_authorization.Controllers
         }
 
         [HttpPost("PasswordRecovery")]
-        public IActionResult RecoveryPassword([FromBody] JObject jsonBody)
+        public ApiResult<string> RecoveryPassword([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
             var newPassword = (string)jsonBody["newPassword"];
             if (login == null || newPassword == null)
-                return BadRequest("Отсутсвует один из параметров запроса (Internal error).");
+                return new ApiResult<string>(new Error { Message = "Отсутсвует один из параметров запроса (Internal error)." });
             var user = _userRepository.GetUser(login);
             if (user == null)
-                return BadRequest("Пользователь отсутствует в системе.");
+                return new ApiResult<string>(new Error { Message = "Пользователь отсутствует в системе." });
             //TODO: update user password in db 
             //_userRepository.Entry(user).State = EntityState.Modified;
             //user.Password = newPassword;
             //_userRepository.SaveChanges();
-            return Ok();
+            return new ApiResult<string>("Ok");
         }
 
         #endregion

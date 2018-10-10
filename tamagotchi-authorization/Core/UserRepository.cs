@@ -9,10 +9,9 @@ namespace tamagotchi_authorization.Core
         public List<User> TestUsers;
         public UserRepository()
         {
-            //TODO: жду БД
             TestUsers = new List<User>
             {
-                new User { Login = "testov", Password = "12345", Email = "test@test.te", Pet = 1 },
+                new User { UserId = 1, Login = "testov", Password = "12345", Email = "test@test.te", Pet = 3 },
             };            
         }
         public User GetUser(string login)
