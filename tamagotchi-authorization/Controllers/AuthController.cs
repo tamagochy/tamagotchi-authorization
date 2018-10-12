@@ -14,9 +14,9 @@ namespace tamagotchi_authorization.Controllers
     public class AuthController : Controller
     {
         private UserRepository _userRepository;
-        public AuthController()
+        public AuthController(UserContext context)
         {
-            _userRepository = new UserRepository();
+            _userRepository = new UserRepository(context);
         }
         [HttpPost("Token")]
         public ApiResult<string> Login([FromBody] JObject jsonBody)
@@ -27,7 +27,7 @@ namespace tamagotchi_authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса (Internal error).",
+                        Message = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             User user;
@@ -69,11 +69,12 @@ namespace tamagotchi_authorization.Controllers
             var password = (string)jsonBody["password"];
             var passwordConfirmation = (string)jsonBody["passwordConfirm"];
             var email = (string)jsonBody["email"];
-            if (login == null || password == null || passwordConfirmation == null || email == null)
+            var pet = (string)jsonBody["pet"];
+            if (login == null || password == null || passwordConfirmation == null || email == null || pet == null)
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса (Internal error).",
+                        Message = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             if (!password.Equals(passwordConfirmation))
@@ -83,13 +84,13 @@ namespace tamagotchi_authorization.Controllers
                         Message = "Пароли не совпадают.",
                         Code = "business.Error"
                     });
-            if (_userRepository.GetUserByEMail(email) != null)
-                return new ApiResult<string>(
-                    new Error
-                    {
-                        Message = "Пользователь с указанным адресом электронной почты уже существует.",
-                        Code = "business.Error"
-                    });
+            //if (_userRepository.GetUserByEMail(email) != null)
+            //    return new ApiResult<string>(
+            //        new Error
+            //        {
+            //            Message = "Пользователь с указанным адресом электронной почты уже существует.",
+            //            Code = "business.Error"
+            //        });
             if (_userRepository.GetUser(login) != null)
                 return new ApiResult<string>(
                     new Error
@@ -97,7 +98,19 @@ namespace tamagotchi_authorization.Controllers
                         Message = "Указанный логин уже существует, попробуйте использовать другой.",
                         Code = "business.Error"
                     });
-            //TODO: add user to db
+            try
+            {
+                _userRepository.AddUser(login, password, email, pet);
+            }
+            catch (Exception exception)
+            {
+                return new ApiResult<string>(
+                    new Error
+                    {
+                        Message = "Ошибка записи в БД. " + exception.Message,
+                        Code = "server.Error"
+                    });
+            }
             return new ApiResult<string>("Ok");
         }
 
@@ -112,7 +125,7 @@ namespace tamagotchi_authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса (Internal error).",
+                        Message = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             User user;
@@ -178,7 +191,7 @@ namespace tamagotchi_authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса (Internal error).",
+                        Message = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             User user;
@@ -202,10 +215,19 @@ namespace tamagotchi_authorization.Controllers
                         Message = "Пользователь отсутствует в системе.",
                         Code = "business.Error"
                     });
-            //TODO: update user password in db 
-            //_userRepository.Entry(user).State = EntityState.Modified;
-            //user.Password = newPassword;
-            //_userRepository.SaveChanges();
+            try
+            {
+                _userRepository.UpdatePassword(user, newPassword);
+            }
+            catch(Exception exception)
+            {
+                return new ApiResult<string>(
+                    new Error
+                    {
+                        Message = "Ошибка записи в БД. " + exception.Message,
+                        Code = "server.Error"
+                    });
+            }
             return new ApiResult<string>("Ok");
         }
 

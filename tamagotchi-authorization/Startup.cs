@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.EntityFrameworkCore;
+using tamagotchi_authorization.Models;
 
 namespace tamagotchi_authorization
 {
@@ -29,6 +31,8 @@ namespace tamagotchi_authorization
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<UserContext>(options => options
+              .UseSqlServer(Configuration.GetConnectionString("LocalDB")));
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                   .AddJwtBearer(options =>
                   {
