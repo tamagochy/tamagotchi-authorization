@@ -27,14 +27,17 @@ namespace tamagotchi_authorization.Core
         public User GetUserByEMail(string email) =>
             _db.User.FirstOrDefault(user => user.Email.Equals(email));
 
-        public void AddUser(string login, string password, string email, string pet) =>
+        public void AddUser(string login, string password, string email, string pet)
+        {
             _db.User.Add(new User
             {
                 Login = login,
                 Password = password,
                 Email = email,
-                Pet = int.Parse(pet) 
+                Pet = int.Parse(pet)
             });
+            _db.SaveChanges();
+        }
 
         public void UpdatePassword(User user, string password)
         {
