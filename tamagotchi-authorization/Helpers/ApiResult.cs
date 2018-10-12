@@ -24,7 +24,7 @@ namespace tamagotchi_authorization.Helpers
     public class Error
     {
         public string Message { get; set; }
-        public int Code { get; set; }
+        public string Code { get; set; }
     }
 
     public class Error<T> : Error where T : class
