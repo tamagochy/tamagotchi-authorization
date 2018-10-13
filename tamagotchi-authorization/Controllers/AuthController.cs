@@ -7,16 +7,17 @@ using System.Net.Mail;
 using System.Net;
 using tamagotchi_authorization.Core;
 using tamagotchi_authorization.Models;
+using Microsoft.Extensions.Logging;
 
 namespace tamagotchi_authorization.Controllers
 {
     [Route("/[controller]")]
     public class AuthController : Controller
     {
-        private UserRepository _userRepository;
-        public AuthController(UserContext context)
+        private readonly IUserRepository _userRepository;
+        public AuthController(UserContext context, ILoggerFactory logger)
         {
-            _userRepository = new UserRepository(context);
+            _userRepository = new UserRepository(context, logger);
         }
         [HttpPost("Token")]
         public ApiResult<string> Login([FromBody] JObject jsonBody)
@@ -33,7 +34,7 @@ namespace tamagotchi_authorization.Controllers
             User user;
             try
             {
-                user = _userRepository.GetUser(login);
+                user = _userRepository.GetUserByLogin(login);
             }
             catch (Exception exception)
             {
@@ -84,14 +85,14 @@ namespace tamagotchi_authorization.Controllers
                         Message = "Пароли не совпадают.",
                         Code = "business.Error"
                     });
-            //if (_userRepository.GetUserByEMail(email) != null)
-            //    return new ApiResult<string>(
-            //        new Error
-            //        {
-            //            Message = "Пользователь с указанным адресом электронной почты уже существует.",
-            //            Code = "business.Error"
-            //        });
-            if (_userRepository.GetUser(login) != null)
+            if (_userRepository.GetUserByEmail(email) != null)
+                return new ApiResult<string>(
+                    new Error
+                    {
+                        Message = "Пользователь с указанным адресом электронной почты уже существует.",
+                        Code = "business.Error"
+                    });
+            if (_userRepository.GetUserByLogin(login) != null)
                 return new ApiResult<string>(
                     new Error
                     {
@@ -100,7 +101,14 @@ namespace tamagotchi_authorization.Controllers
                     });
             try
             {
-                _userRepository.AddUser(login, password, email, pet);
+                _userRepository.AddUser(
+                    new User
+                    {
+                        Login = login,
+                        Password = password,
+                        Email = email,
+                        Pet = int.Parse(pet)
+                    });
             }
             catch (Exception exception)
             {
@@ -131,7 +139,7 @@ namespace tamagotchi_authorization.Controllers
             User user;
             try
             {
-                user = _userRepository.GetUser(login);
+                user = _userRepository.GetUserByLogin(login);
             }
             catch (Exception exception)
             {
@@ -197,7 +205,7 @@ namespace tamagotchi_authorization.Controllers
             User user;
             try
             {
-                user = _userRepository.GetUser(login);
+                user = _userRepository.GetUserByLogin(login);
             }
             catch (Exception exception)
             {
@@ -219,7 +227,7 @@ namespace tamagotchi_authorization.Controllers
             {
                 _userRepository.UpdatePassword(user, newPassword);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 return new ApiResult<string>(
                     new Error

@@ -9,6 +9,7 @@ using System.Text;
 using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.EntityFrameworkCore;
 using tamagotchi_authorization.Models;
+using tamagotchi_authorization.Core;
 
 namespace tamagotchi_authorization
 {
@@ -31,8 +32,8 @@ namespace tamagotchi_authorization
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<UserContext>(options => options
-              .UseSqlServer(Configuration.GetConnectionString("LocalDB")));
+            services.AddDbContext<UserContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("LocalDB")));
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                   .AddJwtBearer(options =>
                   {
@@ -41,10 +42,10 @@ namespace tamagotchi_authorization
                       {
                           // будет ли валидироваться время существования
                           ValidateLifetime = true,
-                          // установка ключа безопасности
-                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Scope.SecurityKey)),
                           // валидация ключа безопасности
                           ValidateIssuerSigningKey = true,
+                          // установка ключа безопасности
+                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Scope.SecurityKey))
                       };
                   });
             services.AddSwaggerGen(c =>
@@ -52,10 +53,15 @@ namespace tamagotchi_authorization
                 c.SwaggerDoc("v1", new Info
                 {
                     Title = "TamagotchiAuth",
-                    Version = "v1"                    
+                    Version = "v1",
+                    Description = "Application Documentation",
+                    TermsOfService = "None",
+                    Contact = new Contact { Name = "Sergey Alekseev", Url = "github.com/itine" },
+                    License = new License { Name = "MIT", Url = "https://en.wikipedia.org/wiki/MIT_License" }
                 });
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddScoped<IUserRepository, UserRepository>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

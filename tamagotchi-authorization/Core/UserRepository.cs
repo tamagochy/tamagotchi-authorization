@@ -1,51 +1,37 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 using tamagotchi_authorization.Models;
 
 namespace tamagotchi_authorization.Core
 {
-    internal class UserRepository
+    internal class UserRepository : IUserRepository
     {
-        private UserContext _db;
-        public UserRepository(UserContext context)
+        private readonly UserContext _db;
+        private readonly ILogger _logger;
+
+        public UserRepository(UserContext context, ILoggerFactory loggerFactory)
         {
             _db = context;
+            _logger = loggerFactory.CreateLogger("UserRepository");
         }
-        public User GetUser(string login)
-        {
-            try
-            {
-                return _db.User.First(user => user.Login.Equals(login));
-            }
-            catch
-            {
-                return null;
-            }
-        }
-        public User GetUserByEMail(string email) =>
-            _db.User.FirstOrDefault(user => user.Email.Equals(email));
 
-        public void AddUser(string login, string password, string email, string pet)
+        public User GetUserByLogin(string login) =>
+            _db.TamagotchiUser.First(user => user.Login.Equals(login));
+
+        public User GetUserByEmail(string eMail) =>
+            _db.TamagotchiUser.FirstOrDefault(user => user.Email.Equals(eMail));
+        public void AddUser(User user)
         {
-            _db.User.Add(new User
-            {
-                Login = login,
-                Password = password,
-                Email = email,
-                Pet = int.Parse(pet)
-            });
+            _db.TamagotchiUser.Add(user);
             _db.SaveChanges();
         }
 
-        public void UpdatePassword(User user, string password)
+        public void UpdatePassword(User user, string newPassword)
         {
             _db.Entry(user).State = EntityState.Modified;
-            user.Password = password;
+            user.Password = newPassword;
             _db.SaveChanges();
         }
-
-
     }
 }
