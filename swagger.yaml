@@ -2,6 +2,14 @@ swagger: '2.0'
 info:
   version: v1
   title: TamagotchiAuth
+  description: Application Documentation
+  termsOfService: None
+  contact:
+    name: Sergey Alekseev
+    url: github.com/itine
+  license:
+    name: MIT
+    url: 'https://en.wikipedia.org/wiki/MIT_License'
 paths:
   /Auth/Token:
     post:
@@ -13,7 +21,10 @@ paths:
         - application/json
         - text/json
         - application/*+json
-      produces: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
       parameters:
         - name: jsonBody
           in: body
@@ -23,6 +34,8 @@ paths:
       responses:
         '200':
           description: Success
+          schema:
+            $ref: '/definitions/ApiResult[String]'
   /Auth/Registration:
     post:
       tags:
@@ -33,7 +46,10 @@ paths:
         - application/json
         - text/json
         - application/*+json
-      produces: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
       parameters:
         - name: jsonBody
           in: body
@@ -43,6 +59,8 @@ paths:
       responses:
         '200':
           description: Success
+          schema:
+            $ref: '/definitions/ApiResult[String]'
   /Auth/SendPageAccess:
     post:
       tags:
@@ -53,7 +71,10 @@ paths:
         - application/json
         - text/json
         - application/*+json
-      produces: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
       parameters:
         - name: jsonBody
           in: body
@@ -63,6 +84,8 @@ paths:
       responses:
         '200':
           description: Success
+          schema:
+            $ref: '/definitions/ApiResult[String]'
   /Auth/PasswordRecovery:
     post:
       tags:
@@ -73,7 +96,10 @@ paths:
         - application/json
         - text/json
         - application/*+json
-      produces: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
       parameters:
         - name: jsonBody
           in: body
@@ -83,4 +109,20 @@ paths:
       responses:
         '200':
           description: Success
-definitions: {}
+          schema:
+            $ref: '/definitions/ApiResult[String]'
+definitions:
+  'ApiResult[String]':
+    type: object
+    properties:
+      data:
+        type: string
+      error:
+        $ref: '#/definitions/Error'
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+      code:
+        type: string
