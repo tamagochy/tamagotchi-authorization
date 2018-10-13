@@ -17,7 +17,7 @@ namespace tamagotchi_authorization.Core
         }
 
         public User GetUserByLogin(string login) =>
-            _db.TamagotchiUser.First(user => user.Login.Equals(login));
+            _db.TamagotchiUser.FirstOrDefault(user => user.Login.Equals(login));
 
         public User GetUserByEmail(string eMail) =>
             _db.TamagotchiUser.FirstOrDefault(user => user.Email.Equals(eMail));
