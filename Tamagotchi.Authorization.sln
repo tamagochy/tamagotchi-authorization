@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tamagotchi-authorization", "tamagotchi-authorization\tamagotchi-authorization.csproj", "{57B11E19-97B5-4481-BE4B-6AFDDBD6A5CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tamagotchi.Authorization", "Tamagotchi.Authorization\Tamagotchi.Authorization.csproj", "{51A59DA6-9C77-48D5-8C2B-68322A66B87A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{57B11E19-97B5-4481-BE4B-6AFDDBD6A5CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{57B11E19-97B5-4481-BE4B-6AFDDBD6A5CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{57B11E19-97B5-4481-BE4B-6AFDDBD6A5CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{57B11E19-97B5-4481-BE4B-6AFDDBD6A5CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51A59DA6-9C77-48D5-8C2B-68322A66B87A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51A59DA6-9C77-48D5-8C2B-68322A66B87A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51A59DA6-9C77-48D5-8C2B-68322A66B87A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51A59DA6-9C77-48D5-8C2B-68322A66B87A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {830B8B64-ED81-4702-80F8-B0DF9729106A}
+		SolutionGuid = {8D6DC3F4-F394-4A44-8290-B14AA6DDECBF}
 	EndGlobalSection
 EndGlobal

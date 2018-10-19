@@ -1,21 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System.Linq;
-using tamagotchi_authorization.Models;
+using Tamagotchi.Authorization.Models;
 
-namespace tamagotchi_authorization.Core
+namespace Tamagotchi.Authorization.Core
 {
     internal class UserRepository : IUserRepository
     {
         private readonly UserContext _db;
-        private readonly ILogger _logger;
-
-        public UserRepository(UserContext context, ILoggerFactory loggerFactory)
+        public UserRepository(UserContext context)
         {
             _db = context;
-            _logger = loggerFactory.CreateLogger("UserRepository");
         }
-
         public User GetUserByLogin(string login) =>
             _db.TamagotchiUser.FirstOrDefault(user => user.Login.Equals(login));
 
@@ -26,7 +21,6 @@ namespace tamagotchi_authorization.Core
             _db.TamagotchiUser.Add(user);
             _db.SaveChanges();
         }
-
         public void UpdatePassword(User user, string newPassword)
         {
             _db.Entry(user).State = EntityState.Modified;

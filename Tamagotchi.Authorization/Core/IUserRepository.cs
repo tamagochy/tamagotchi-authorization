@@ -1,9 +1,10 @@
 ﻿
-using tamagotchi_authorization.Models;
 
-namespace tamagotchi_authorization.Core
+using Tamagotchi.Authorization.Models;
+
+namespace Tamagotchi.Authorization.Core
 {
-    internal interface IUserRepository
+    public interface IUserRepository
     {
         User GetUserByLogin(string login);
         User GetUserByEmail(string eMail);

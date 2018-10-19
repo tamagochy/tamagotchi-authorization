@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace tamagotchi_authorization.Models
+namespace Tamagotchi.Authorization.Models
 {
     public partial class UserContext : DbContext
     {

@@ -1,22 +1,22 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Swashbuckle.AspNetCore.Swagger;
-using Microsoft.EntityFrameworkCore;
-using tamagotchi_authorization.Models;
-using tamagotchi_authorization.Core;
+using Microsoft.IdentityModel.Tokens;
+using Tamagotchi.Authorization.Core;
+using Tamagotchi.Authorization.Models;
 
-namespace tamagotchi_authorization
+namespace Tamagotchi.Authorization
 {
     public class Startup
     {
         public IConfiguration Configuration { get; }
         public IHostingEnvironment Environment { get; }
+        public object CompatibilityVersion { get; private set; }
 
         public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
@@ -33,7 +33,8 @@ namespace tamagotchi_authorization
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<UserContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("LocalDB")));
+                options.UseNpgsql(Configuration.GetConnectionString("LocalDB")));
+            var appInfo = Configuration.GetSection("AppInfo");
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                   .AddJwtBearer(options =>
                   {
@@ -45,7 +46,7 @@ namespace tamagotchi_authorization
                           // валидация ключа безопасности
                           ValidateIssuerSigningKey = true,
                           // установка ключа безопасности
-                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Scope.SecurityKey))
+                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appInfo.GetSection("SecretKey").Value))
                       };
                   });
             services.AddSwaggerGen(c =>
@@ -60,12 +61,14 @@ namespace tamagotchi_authorization
                     License = new License { Name = "MIT", Url = "https://en.wikipedia.org/wiki/MIT_License" }
                 });
             });
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.Configure<AppInfo>(appInfo);
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            UpdateDatabase(app);
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
@@ -79,6 +82,19 @@ namespace tamagotchi_authorization
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");
                 options.RoutePrefix = "/swagger";
             });
+        }
+
+        private static void UpdateDatabase(IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<UserContext>())
+                {
+                    context.Database.Migrate();
+                }
+            }
         }
     }
 }

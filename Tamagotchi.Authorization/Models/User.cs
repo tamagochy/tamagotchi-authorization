@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace tamagotchi_authorization.Models
+namespace Tamagotchi.Authorization.Models
 {
     public class User
     {

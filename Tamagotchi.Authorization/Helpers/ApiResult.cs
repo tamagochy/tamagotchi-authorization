@@ -1,6 +1,4 @@
-﻿
-
-namespace tamagotchi_authorization.Helpers
+﻿namespace Tamagotchi.Authorization.Helpers
 {
     public class ApiResult<T> where T : class
     {

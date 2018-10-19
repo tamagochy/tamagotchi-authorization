@@ -1,25 +1,29 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using tamagotchi_authorization.Helpers;
-using Newtonsoft.Json.Linq;
-using System.Threading.Tasks;
-using System.Net.Mail;
-using System.Net;
-using tamagotchi_authorization.Core;
-using tamagotchi_authorization.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Net;
+using System.Net.Mail;
+using System.Threading.Tasks;
+using Tamagotchi.Authorization.Core;
+using Tamagotchi.Authorization.Helpers;
+using Tamagotchi.Authorization.Models;
 
-namespace tamagotchi_authorization.Controllers
+namespace Tamagotchi.Authorization.Controllers
 {
     [Route("/[controller]")]
     public class AuthController : Controller
     {
         private readonly IUserRepository _userRepository;
-        public AuthController(UserContext context, ILoggerFactory logger)
+        private readonly AppInfo _appInfo;
+        public AuthController(IUserRepository userRepository, IOptions<AppInfo> appInfo)
         {
-            _userRepository = new UserRepository(context, logger);
+            _userRepository = userRepository;
+            _appInfo = appInfo.Value;
         }
-        [HttpPost("Token")]
+
+        [HttpPost("login")]
         public ApiResult<string> Login([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
@@ -60,10 +64,10 @@ namespace tamagotchi_authorization.Controllers
                         Message = "Ошибка авторизации. Неверный пароль.",
                         Code = "https://i.ytimg.com/vi/qkudeorV03o/maxresdefault.jpg"
                     });
-            return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId));
+            return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId, _appInfo.SecretKey));
         }
 
-        [HttpPost("Registration")]
+        [HttpPost("registration")]
         public ApiResult<string> Registration([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
@@ -124,7 +128,7 @@ namespace tamagotchi_authorization.Controllers
 
         #region Access Recovery
 
-        [HttpPost("SendPageAccess")]
+        [HttpPost("sendpageaccess")]
         public ApiResult<string> SendMailWithPageAccess([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
@@ -159,7 +163,7 @@ namespace tamagotchi_authorization.Controllers
                     });
             try
             {
-                SendEmailAsync(user.Email, pageAccessAddress).GetAwaiter();
+                SendEmailAsync(user.Email, pageAccessAddress, _appInfo.ApplicationEmail, _appInfo.EmailPassword).GetAwaiter();
             }
             catch (Exception exception)
             {
@@ -173,9 +177,9 @@ namespace tamagotchi_authorization.Controllers
             return new ApiResult<string>("Ok");
         }
 
-        private static async Task SendEmailAsync(string userMail, string pageAccess)
+        private static async Task SendEmailAsync(string userMail, string pageAccess, string appEmail, string appPassword)
         {
-            var from = new MailAddress(Scope.ApplicationMail);
+            var from = new MailAddress(appEmail);
             var to = new MailAddress(userMail);
             var message = new MailMessage(from, to)
             {
@@ -184,13 +188,13 @@ namespace tamagotchi_authorization.Controllers
             };
             var smtp = new SmtpClient("smtp.gmail.com", 587)
             {
-                Credentials = new NetworkCredential(Scope.ApplicationMail, Scope.MailPassword),
+                Credentials = new NetworkCredential(appEmail, appPassword),
                 EnableSsl = true
             };
             await smtp.SendMailAsync(message);
         }
 
-        [HttpPost("PasswordRecovery")]
+        [HttpPost("passwordrecovery")]
         public ApiResult<string> RecoveryPassword([FromBody] JObject jsonBody)
         {
             var login = (string)jsonBody["login"];
