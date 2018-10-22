@@ -6,16 +6,32 @@ info:
   termsOfService: None
   contact:
     name: Sergey Alekseev
-    url: github.com/itine
+    url: 'https://github.com/itine'
   license:
     name: MIT
     url: 'https://en.wikipedia.org/wiki/MIT_License'
 paths:
-  /Auth/Token:
+  /auth/getversion:
+    get:
+      tags:
+        - auth
+      operationId: AuthGetversionGet
+      consumes: []
+      produces:
+        - text/plain
+        - application/json
+        - text/json
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: string
+  /auth/login:
     post:
       tags:
-        - Auth
-      operationId: AuthTokenPost
+        - auth
+      operationId: AuthLoginPost
       consumes:
         - application/json-patch+json
         - application/json
@@ -26,20 +42,20 @@ paths:
         - application/json
         - text/json
       parameters:
-        - name: jsonBody
+        - name: loginModel
           in: body
           required: false
           schema:
-            type: object
+            $ref: '#/definitions/LoginModel'
       responses:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[String]'
-  /Auth/Registration:
+            $ref: '/definitions/ApiResult[string]'
+  /auth/registration:
     post:
       tags:
-        - Auth
+        - auth
       operationId: AuthRegistrationPost
       consumes:
         - application/json-patch+json
@@ -51,21 +67,21 @@ paths:
         - application/json
         - text/json
       parameters:
-        - name: jsonBody
+        - name: registrationModel
           in: body
           required: false
           schema:
-            type: object
+            $ref: '#/definitions/RegistrationModel'
       responses:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[String]'
-  /Auth/SendPageAccess:
+            $ref: '/definitions/ApiResult[string]'
+  /auth/sendpageaccess:
     post:
       tags:
-        - Auth
-      operationId: AuthSendPageAccessPost
+        - auth
+      operationId: AuthSendpageaccessPost
       consumes:
         - application/json-patch+json
         - application/json
@@ -76,21 +92,21 @@ paths:
         - application/json
         - text/json
       parameters:
-        - name: jsonBody
+        - name: sendingMailModel
           in: body
           required: false
           schema:
-            type: object
+            $ref: '#/definitions/SendingMailModel'
       responses:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[String]'
-  /Auth/PasswordRecovery:
+            $ref: '/definitions/ApiResult[string]'
+  /auth/passwordrecovery:
     post:
       tags:
-        - Auth
-      operationId: AuthPasswordRecoveryPost
+        - auth
+      operationId: AuthPasswordrecoveryPost
       consumes:
         - application/json-patch+json
         - application/json
@@ -101,28 +117,65 @@ paths:
         - application/json
         - text/json
       parameters:
-        - name: jsonBody
+        - name: recoveryPasswordModel
           in: body
           required: false
           schema:
-            type: object
+            $ref: '#/definitions/RecoveryPasswordModel'
       responses:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[String]'
+            $ref: '/definitions/ApiResult[string]'
 definitions:
+  LoginModel:
+    type: object
+    properties:
+      login:
+        type: string
+      password:
+        type: string
   'ApiResult[String]':
     type: object
     properties:
       data:
         type: string
-      error:
-        $ref: '#/definitions/Error'
+      errors:
+        uniqueItems: false
+        type: array
+        items:
+          $ref: '#/definitions/Error'
   Error:
     type: object
     properties:
-      message:
+      attr:
         type: string
       code:
+        type: string
+  RegistrationModel:
+    type: object
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+      passwordConfirm:
+        type: string
+      email:
+        type: string
+      pet:
+        type: string
+  SendingMailModel:
+    type: object
+    properties:
+      login:
+        type: string
+      pageAccess:
+        type: string
+  RecoveryPasswordModel:
+    type: object
+    properties:
+      login:
+        type: string
+      newPassword:
         type: string
