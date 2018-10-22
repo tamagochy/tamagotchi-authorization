@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Tamagotchi.Authorization.Helpers
 {
@@ -16,8 +17,9 @@ namespace Tamagotchi.Authorization.Helpers
         {
             Errors = new List<Error> { error };
         }
-
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public T Data { get; set; }
+        [JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
         public List<Error> Errors { get; set; }
     }
 

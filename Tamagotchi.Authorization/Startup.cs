@@ -81,8 +81,7 @@ namespace Tamagotchi.Authorization
             //Enable middleware to serve swagger - ui assets(HTML, JS, CSS etc.)
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");
-                options.RoutePrefix = "/swagger";
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");                
             });
             app.UseSwagger();
         }
