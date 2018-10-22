@@ -1,4 +1,6 @@
-﻿namespace Tamagotchi.Authorization.Helpers
+﻿using System.Collections.Generic;
+
+namespace Tamagotchi.Authorization.Helpers
 {
     public class ApiResult<T> where T : class
     {
@@ -12,16 +14,16 @@
 
         public ApiResult(Error error)
         {
-            Error = error;
+            Errors = new List<Error> { error };
         }
 
         public T Data { get; set; }
-        public Error Error { get; set; }
+        public List<Error> Errors { get; set; }
     }
 
     public class Error
     {
-        public string Message { get; set; }
+        public string Attr { get; set; }
         public string Code { get; set; }
     }
 

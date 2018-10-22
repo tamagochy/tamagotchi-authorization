@@ -40,7 +40,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса.",
+                        Attr = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             User user;
@@ -53,7 +53,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Ошибка чтения БД. " + exception.Message,
+                        Attr = "Ошибка чтения БД. " + exception.Message,
                         Code = "server.Error"
                     });
             }
@@ -61,7 +61,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Логин не найден в системе.",
+                        Attr = "Логин не найден в системе.",
                         Code = "business.Error"
                     });
             var credentials = user.Password.Equals(password);
@@ -69,7 +69,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Ошибка авторизации. Неверный пароль.",
+                        Attr = "Ошибка авторизации. Неверный пароль.",
                         Code = "https://i.ytimg.com/vi/qkudeorV03o/maxresdefault.jpg"
                     });
             return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId, _appInfo.SecretKey));
@@ -87,28 +87,28 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса.",
+                        Attr = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             if (!password.Equals(passwordConfirmation))
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Пароли не совпадают.",
+                        Attr = "Пароли не совпадают.",
                         Code = "business.Error"
                     });
             if (_userRepository.GetUserByEmail(email) != null)
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Пользователь с указанным адресом электронной почты уже существует.",
+                        Attr = "Пользователь с указанным адресом электронной почты уже существует.",
                         Code = "business.Error"
                     });
             if (_userRepository.GetUserByLogin(login) != null)
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Указанный логин уже существует, попробуйте использовать другой.",
+                        Attr = "Указанный логин уже существует, попробуйте использовать другой.",
                         Code = "business.Error"
                     });
             try
@@ -127,7 +127,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Ошибка записи в БД. " + exception.Message,
+                        Attr = "Ошибка записи в БД. " + exception.Message,
                         Code = "server.Error"
                     });
             }
@@ -145,7 +145,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса.",
+                        Attr = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             User user;
@@ -158,7 +158,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Ошибка чтения БД. " + exception.Message,
+                        Attr = "Ошибка чтения БД. " + exception.Message,
                         Code = "server.Error"
                     });
             }
@@ -166,7 +166,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Пользователь отсутствует в системе.",
+                        Attr = "Пользователь отсутствует в системе.",
                         Code = "business.Error"
                     });
             try
@@ -178,7 +178,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = exception.Message,
+                        Attr = exception.Message,
                         Code = "server.Error"
                     });
             }
@@ -211,7 +211,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Отсутсвует один из параметров запроса.",
+                        Attr = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
             User user;
@@ -224,7 +224,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Ошибка чтения из БД. " + exception.Message,
+                        Attr = "Ошибка чтения из БД. " + exception.Message,
                         Code = "server.Error"
                     });
             }
@@ -232,7 +232,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Пользователь отсутствует в системе.",
+                        Attr = "Пользователь отсутствует в системе.",
                         Code = "business.Error"
                     });
             try
@@ -244,7 +244,7 @@ namespace Tamagotchi.Authorization.Controllers
                 return new ApiResult<string>(
                     new Error
                     {
-                        Message = "Ошибка записи в БД. " + exception.Message,
+                        Attr = "Ошибка записи в БД. " + exception.Message,
                         Code = "server.Error"
                     });
             }
