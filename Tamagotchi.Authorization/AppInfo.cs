@@ -5,6 +5,7 @@ namespace Tamagotchi.Authorization
     {
         //Время жизни токена в часах
         public const int LifeTime = 24;
+        public string ProjectVersion { get; set; }
         public string SecretKey { get; set; }
         //Почта приложения
         public string ApplicationEmail { get; set; } 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using System;
@@ -22,6 +21,15 @@ namespace Tamagotchi.Authorization.Controllers
             _userRepository = userRepository;
             _appInfo = appInfo.Value;
         }
+
+        [HttpGet("getversion")]
+        public string GetVersion()
+        {
+            dynamic jsonObject = new JObject();
+            jsonObject.version = _appInfo.ProjectVersion;
+            return jsonObject.ToString();
+        }
+
 
         [HttpPost("login")]
         public ApiResult<string> Login([FromBody] JObject jsonBody)
