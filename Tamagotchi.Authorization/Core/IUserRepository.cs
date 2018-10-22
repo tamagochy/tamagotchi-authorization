@@ -1,6 +1,4 @@
-﻿
-
-using Tamagotchi.Authorization.Models;
+﻿using Tamagotchi.Authorization.Models;
 
 namespace Tamagotchi.Authorization.Core
 {

@@ -7,6 +7,7 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using Tamagotchi.Authorization.Core;
 using Tamagotchi.Authorization.Helpers;
+using Tamagotchi.Authorization.JsonModels;
 using Tamagotchi.Authorization.Models;
 
 namespace Tamagotchi.Authorization.Controllers
@@ -29,14 +30,11 @@ namespace Tamagotchi.Authorization.Controllers
             jsonObject.version = _appInfo.ProjectVersion;
             return jsonObject.ToString();
         }
-
-
+        
         [HttpPost("login")]
-        public ApiResult<string> Login([FromBody] JObject jsonBody)
+        public ApiResult<string> Login([FromBody] LoginModel loginModel)
         {
-            var login = (string)jsonBody["login"];
-            var password = (string)jsonBody["password"];
-            if (login == null || password == null)
+            if (loginModel.Login == null || loginModel.Password == null)
                 return new ApiResult<string>(
                     new Error
                     {
@@ -46,7 +44,7 @@ namespace Tamagotchi.Authorization.Controllers
             User user;
             try
             {
-                user = _userRepository.GetUserByLogin(login);
+                user = _userRepository.GetUserByLogin(loginModel.Login);
             }
             catch (Exception exception)
             {
@@ -64,7 +62,7 @@ namespace Tamagotchi.Authorization.Controllers
                         Attr = "Логин не найден в системе.",
                         Code = "business.Error"
                     });
-            var credentials = user.Password.Equals(password);
+            var credentials = user.Password.Equals(loginModel.Password);
             if (!credentials)
                 return new ApiResult<string>(
                     new Error
@@ -76,35 +74,31 @@ namespace Tamagotchi.Authorization.Controllers
         }
 
         [HttpPost("registration")]
-        public ApiResult<string> Registration([FromBody] JObject jsonBody)
+        public ApiResult<string> Registration([FromBody] RegistrationModel registrationModel)
         {
-            var login = (string)jsonBody["login"];
-            var password = (string)jsonBody["password"];
-            var passwordConfirmation = (string)jsonBody["passwordConfirm"];
-            var email = (string)jsonBody["email"];
-            var pet = (string)jsonBody["pet"];
-            if (login == null || password == null || passwordConfirmation == null || email == null || pet == null)
+            if (registrationModel.Login == null || registrationModel.Password == null || registrationModel.PasswordConfirm == null || 
+                registrationModel.Email == null || registrationModel.Pet == null)
                 return new ApiResult<string>(
                     new Error
                     {
                         Attr = "Отсутсвует один из параметров запроса.",
                         Code = "protocol.Incorrect"
                     });
-            if (!password.Equals(passwordConfirmation))
+            if (!registrationModel.Password.Equals(registrationModel.PasswordConfirm))
                 return new ApiResult<string>(
                     new Error
                     {
                         Attr = "Пароли не совпадают.",
                         Code = "business.Error"
                     });
-            if (_userRepository.GetUserByEmail(email) != null)
+            if (_userRepository.GetUserByEmail(registrationModel.Email) != null)
                 return new ApiResult<string>(
                     new Error
                     {
                         Attr = "Пользователь с указанным адресом электронной почты уже существует.",
                         Code = "business.Error"
                     });
-            if (_userRepository.GetUserByLogin(login) != null)
+            if (_userRepository.GetUserByLogin(registrationModel.Login) != null)
                 return new ApiResult<string>(
                     new Error
                     {
@@ -116,10 +110,10 @@ namespace Tamagotchi.Authorization.Controllers
                 _userRepository.AddUser(
                     new User
                     {
-                        Login = login,
-                        Password = password,
-                        Email = email,
-                        Pet = int.Parse(pet)
+                        Login = registrationModel.Login,
+                        Password = registrationModel.Password,
+                        Email = registrationModel.Email,
+                        Pet = int.Parse(registrationModel.Pet)
                     });
             }
             catch (Exception exception)
@@ -137,11 +131,9 @@ namespace Tamagotchi.Authorization.Controllers
         #region Access Recovery
 
         [HttpPost("sendpageaccess")]
-        public ApiResult<string> SendMailWithPageAccess([FromBody] JObject jsonBody)
+        public ApiResult<string> SendMailWithPageAccess([FromBody] SendingMailModel sendingMailModel)
         {
-            var login = (string)jsonBody["login"];
-            var pageAccessAddress = (string)jsonBody["pageAccess"];
-            if (login == null || pageAccessAddress == null)
+            if (sendingMailModel.Login == null || sendingMailModel.PageAccess == null)
                 return new ApiResult<string>(
                     new Error
                     {
@@ -151,7 +143,7 @@ namespace Tamagotchi.Authorization.Controllers
             User user;
             try
             {
-                user = _userRepository.GetUserByLogin(login);
+                user = _userRepository.GetUserByLogin(sendingMailModel.Login);
             }
             catch (Exception exception)
             {
@@ -171,7 +163,7 @@ namespace Tamagotchi.Authorization.Controllers
                     });
             try
             {
-                SendEmailAsync(user.Email, pageAccessAddress, _appInfo.ApplicationEmail, _appInfo.EmailPassword).GetAwaiter();
+                SendEmailAsync(user.Email, sendingMailModel.PageAccess, _appInfo.ApplicationEmail, _appInfo.EmailPassword).GetAwaiter();
             }
             catch (Exception exception)
             {
@@ -203,11 +195,9 @@ namespace Tamagotchi.Authorization.Controllers
         }
 
         [HttpPost("passwordrecovery")]
-        public ApiResult<string> RecoveryPassword([FromBody] JObject jsonBody)
+        public ApiResult<string> RecoveryPassword([FromBody] RecoveryPasswordModel recoveryPasswordModel)
         {
-            var login = (string)jsonBody["login"];
-            var newPassword = (string)jsonBody["newPassword"];
-            if (login == null || newPassword == null)
+            if (recoveryPasswordModel.Login == null || recoveryPasswordModel.NewPassword == null)
                 return new ApiResult<string>(
                     new Error
                     {
@@ -217,7 +207,7 @@ namespace Tamagotchi.Authorization.Controllers
             User user;
             try
             {
-                user = _userRepository.GetUserByLogin(login);
+                user = _userRepository.GetUserByLogin(recoveryPasswordModel.Login);
             }
             catch (Exception exception)
             {
@@ -237,7 +227,7 @@ namespace Tamagotchi.Authorization.Controllers
                     });
             try
             {
-                _userRepository.UpdatePassword(user, newPassword);
+                _userRepository.UpdatePassword(user, recoveryPasswordModel.NewPassword);
             }
             catch (Exception exception)
             {

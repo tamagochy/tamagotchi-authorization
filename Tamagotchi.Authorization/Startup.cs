@@ -9,6 +9,8 @@ using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.IdentityModel.Tokens;
 using Tamagotchi.Authorization.Core;
 using Tamagotchi.Authorization.Models;
+using Microsoft.Extensions.PlatformAbstractions;
+using System.IO;
 
 namespace Tamagotchi.Authorization
 {
@@ -33,7 +35,7 @@ namespace Tamagotchi.Authorization
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<UserContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("LocalDB")));
+                options.UseSqlServer(Configuration.GetConnectionString("LocalDB")));
             var appInfo = Configuration.GetSection("AppInfo");
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                   .AddJwtBearer(options =>
@@ -59,7 +61,7 @@ namespace Tamagotchi.Authorization
                     TermsOfService = "None",
                     Contact = new Contact { Name = "Sergey Alekseev", Url = "github.com/itine" },
                     License = new License { Name = "MIT", Url = "https://en.wikipedia.org/wiki/MIT_License" }
-                });
+                });               
             });
             services.AddMvc();
             services.AddScoped<IUserRepository, UserRepository>();
@@ -68,7 +70,7 @@ namespace Tamagotchi.Authorization
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            UpdateDatabase(app);
+            //UpdateDatabase(app);
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
@@ -82,6 +84,7 @@ namespace Tamagotchi.Authorization
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");
                 options.RoutePrefix = "/swagger";
             });
+            app.UseSwagger();
         }
 
         private static void UpdateDatabase(IApplicationBuilder app)
