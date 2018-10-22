@@ -1,13 +1,19 @@
-FROM microsoft/aspnetcore-build:2.0 AS build-env 
-WORKDIR /app 
+FROM microsoft/aspnetcore:2.0 AS base
+WORKDIR /app
+EXPOSE 80
 
-COPY *.csproj ./ 
-RUN dotnet restore 
+FROM microsoft/aspnetcore-build:2.0 AS build
+WORKDIR /src
+COPY Tamagotchi.Authorization/Tamagotchi.Authorization.csproj Tamagotchi.Authorization/
+RUN dotnet restore Tamagotchi.Authorization/Tamagotchi.Authorization.csproj
+COPY . .
+WORKDIR /src/Tamagotchi.Authorization
+RUN dotnet build Tamagotchi.Authorization.csproj -c Release -o /app
 
-COPY . ./ 
-RUN dotnet publish -c Release -o out 
+FROM build AS publish
+RUN dotnet publish Tamagotchi.Authorization.csproj -c Release -o /app
 
-FROM microsoft/aspnetcore-build:2.0 
-WORKDIR /app 
-COPY —from=build-env /app/out . 
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
 ENTRYPOINT ["dotnet", "Tamagotchi.Authorization.dll"]
