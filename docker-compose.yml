@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  tamagotchi.authorization:
+    image: ${DOCKER_REGISTRY}tamagotchiauthorization
+    build:
+      context: .
+      dockerfile: Tamagotchi.Authorization/Dockerfile
