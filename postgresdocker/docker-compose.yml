@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+ tamagotchipostgres:
+     image: tamagotchipostgres
+     restart: always
+     build:
+       context: .
+       dockerfile: Dockerfile
+     ports:
+       - "5432:5432"
+     volumes:
+       - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

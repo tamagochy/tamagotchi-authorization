@@ -6,12 +6,12 @@ FROM microsoft/aspnetcore-build:2.0 AS build
 WORKDIR /src
 COPY Tamagotchi.Authorization/Tamagotchi.Authorization.csproj Tamagotchi.Authorization/
 RUN dotnet restore Tamagotchi.Authorization/Tamagotchi.Authorization.csproj
-COPY . .
 WORKDIR /src/Tamagotchi.Authorization
-RUN dotnet build Tamagotchi.Authorization.csproj -c Release -o /app
+COPY . .
+RUN dotnet build Tamagotchi.Authorization/Tamagotchi.Authorization.csproj -c Release -o /app
 
 FROM build AS publish
-RUN dotnet publish Tamagotchi.Authorization.csproj -c Release -o /app
+RUN dotnet publish Tamagotchi.Authorization/Tamagotchi.Authorization.csproj -c Release -o /app
 
 FROM base AS final
 WORKDIR /app

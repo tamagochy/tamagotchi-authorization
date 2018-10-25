@@ -9,8 +9,6 @@ using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.IdentityModel.Tokens;
 using Tamagotchi.Authorization.Core;
 using Tamagotchi.Authorization.Models;
-using Microsoft.Extensions.PlatformAbstractions;
-using System.IO;
 
 namespace Tamagotchi.Authorization
 {
@@ -35,22 +33,22 @@ namespace Tamagotchi.Authorization
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<UserContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("LocalDB")));
+                options.UseNpgsql(Configuration.GetConnectionString("LocalDB")));
             var appInfo = Configuration.GetSection("AppInfo");
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                  .AddJwtBearer(options =>
-                  {
-                      options.RequireHttpsMetadata = false;
-                      options.TokenValidationParameters = new TokenValidationParameters
-                      {
-                          // будет ли валидироваться время существования
-                          ValidateLifetime = true,
-                          // валидация ключа безопасности
-                          ValidateIssuerSigningKey = true,
-                          // установка ключа безопасности
-                          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appInfo.GetSection("SecretKey").Value))
-                      };
-                  });
+            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            //      .AddJwtBearer(options =>
+            //      {
+            //          options.RequireHttpsMetadata = false;
+            //          options.TokenValidationParameters = new TokenValidationParameters
+            //          {
+            //              // будет ли валидироваться время существования
+            //              ValidateLifetime = true,
+            //              // валидация ключа безопасности
+            //              ValidateIssuerSigningKey = true,
+            //              // установка ключа безопасности
+            //              IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appInfo.GetSection("SecretKey").Value))
+            //          };
+            //      });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info
@@ -61,7 +59,7 @@ namespace Tamagotchi.Authorization
                     TermsOfService = "None",
                     Contact = new Contact { Name = "Sergey Alekseev", Url = "github.com/itine" },
                     License = new License { Name = "MIT", Url = "https://en.wikipedia.org/wiki/MIT_License" }
-                });               
+                });
             });
             services.AddMvc();
             services.AddScoped<IUserRepository, UserRepository>();
@@ -70,7 +68,7 @@ namespace Tamagotchi.Authorization
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            //UpdateDatabase(app);
+            UpdateDatabase(app);
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
@@ -81,7 +79,7 @@ namespace Tamagotchi.Authorization
             //Enable middleware to serve swagger - ui assets(HTML, JS, CSS etc.)
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");                
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");
             });
             app.UseSwagger();
         }

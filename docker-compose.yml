@@ -1,8 +1,18 @@
 version: '3.4'
 
 services:
+  db:
+     image: postgres:10.5
+     restart: always
+     ports:
+       - "5432:5432"
+
   tamagotchi.authorization:
-    image: ${DOCKER_REGISTRY}tamagotchiauthorization
+    image: tamagotchiauthorization
+    ports:
+     - "5001:80"
     build:
       context: .
       dockerfile: Tamagotchi.Authorization/Dockerfile
+    depends_on:
+      - "db"
