@@ -1,18 +1,27 @@
-version: '3.4'
-
+version: '3'
 services:
-  db:
-     image: postgres:10.5
-     restart: always
-     ports:
-       - "5432:5432"
-
-  tamagotchi.authorization:
-    image: tamagotchiauthorization
+  app:
+    image: itine/tamagotchi-authorization
+    restart: always
     ports:
-     - "5001:80"
-    build:
-      context: .
-      dockerfile: Dockerfile
+    - "5001:80"
     depends_on:
-      - "db"
+    - db
+  db:
+    image: postgres:10.5
+    restart: always
+    ports:
+    - "5432:5432"
+    environment:
+      POSTGRES_DB: tamagochi
+      POSTGRES_PASSWORD: root
+    volumes:
+    - "postgres-data-auth:/var/lib/postgresql/data"
+  adminer:
+    image: adminer:4
+    restart: always
+    ports:
+    - "9999:8080"
+volumes:
+  postgres-data-auth:
+    driver: local
