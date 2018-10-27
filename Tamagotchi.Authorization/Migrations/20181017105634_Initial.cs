@@ -15,8 +15,7 @@ namespace Tamagotchi.Authorization.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Login = table.Column<string>(maxLength: 24, nullable: true),
                     Password = table.Column<string>(maxLength: 24, nullable: true),
-                    Email = table.Column<string>(maxLength: 50, nullable: true),
-                    Pet = table.Column<int>(nullable: false)
+                    Email = table.Column<string>(maxLength: 50, nullable: true)
                 },
                 constraints: table =>
                 {

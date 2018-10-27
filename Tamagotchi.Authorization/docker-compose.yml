@@ -13,6 +13,6 @@ services:
      - "5001:80"
     build:
       context: .
-      dockerfile: Tamagotchi.Authorization/Dockerfile
+      dockerfile: Dockerfile
     depends_on:
       - "db"

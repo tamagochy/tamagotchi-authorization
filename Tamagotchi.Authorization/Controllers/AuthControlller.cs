@@ -12,7 +12,6 @@ using Tamagotchi.Authorization.Models;
 
 namespace Tamagotchi.Authorization.Controllers
 {
-    [Route("/[controller]")]
     public class AuthController : Controller
     {
         private readonly IUserRepository _userRepository;
@@ -23,7 +22,7 @@ namespace Tamagotchi.Authorization.Controllers
             _appInfo = appInfo.Value;
         }
 
-        [HttpGet("getversion")]
+        [HttpGet("version")]
         public string GetVersion()
         {
             dynamic jsonObject = new JObject();
@@ -73,7 +72,7 @@ namespace Tamagotchi.Authorization.Controllers
             return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId, _appInfo.SecretKey));
         }
 
-        [HttpPost("registration")]
+        [HttpPost("register")]
         public ApiResult<string> Registration([FromBody] RegistrationModel registrationModel)
         {
             if (registrationModel.Login == null || registrationModel.Password == null || registrationModel.PasswordConfirm == null || 
@@ -112,8 +111,7 @@ namespace Tamagotchi.Authorization.Controllers
                     {
                         Login = registrationModel.Login,
                         Password = registrationModel.Password,
-                        Email = registrationModel.Email,
-                        Pet = int.Parse(registrationModel.Pet)
+                        Email = registrationModel.Email
                     });
             }
             catch (Exception exception)
@@ -130,7 +128,7 @@ namespace Tamagotchi.Authorization.Controllers
 
         #region Access Recovery
 
-        [HttpPost("sendpageaccess")]
+        [HttpPost("password/recover")]
         public ApiResult<string> SendMailWithPageAccess([FromBody] SendingMailModel sendingMailModel)
         {
             if (sendingMailModel.Login == null || sendingMailModel.PageAccess == null)
@@ -184,7 +182,7 @@ namespace Tamagotchi.Authorization.Controllers
             var message = new MailMessage(from, to)
             {
                 Subject = "Восстановление доступа",
-                Body = "Вы хотите восстановить пароль доступа.\nПожалуйста, посетите страницу восстановления:\n" + pageAccess
+                Body = "Вы хотите восстановить пароль доступа. Пожалуйста, посетите страницу восстановления: " + pageAccess
             };
             var smtp = new SmtpClient("smtp.gmail.com", 587)
             {
@@ -194,7 +192,7 @@ namespace Tamagotchi.Authorization.Controllers
             await smtp.SendMailAsync(message);
         }
 
-        [HttpPost("passwordrecovery")]
+        [HttpPost("password/recover/confirm")]
         public ApiResult<string> RecoveryPassword([FromBody] RecoveryPasswordModel recoveryPasswordModel)
         {
             if (recoveryPasswordModel.Login == null || recoveryPasswordModel.NewPassword == null)

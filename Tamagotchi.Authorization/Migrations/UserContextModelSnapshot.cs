@@ -29,8 +29,6 @@ namespace Tamagotchi.Authorization.Migrations
                     b.Property<string>("Password")
                         .HasMaxLength(24);
 
-                    b.Property<int>("Pet");
-
                     b.HasKey("UserId");
 
                     b.ToTable("TamagotchiUser");
