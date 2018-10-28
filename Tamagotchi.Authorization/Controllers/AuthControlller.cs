@@ -12,6 +12,8 @@ using Tamagotchi.Authorization.Models;
 
 namespace Tamagotchi.Authorization.Controllers
 {
+    [Consumes("application/json")]
+    [Produces("application/json")]
     public class AuthController : Controller
     {
         private readonly IUserRepository _userRepository;
@@ -33,13 +35,12 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("login")]
         public ApiResult<string> Login([FromBody] LoginModel loginModel)
         {
-            if (loginModel.Login == null || loginModel.Password == null)
-                return new ApiResult<string>(
-                    new Error
-                    {
-                        Attr = "Отсутсвует один из параметров запроса.",
-                        Code = "protocol.Incorrect"
-                    });
+            if (!ModelState.IsValid)
+                return new ApiResult<string>(new Error
+                {
+                    Attr = "Отсутсвует один из параметров запроса.",
+                    Code = "protocol.Incorrect"
+                });
             User user;
             try
             {
@@ -75,8 +76,7 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("register")]
         public ApiResult<string> Registration([FromBody] RegistrationModel registrationModel)
         {
-            if (registrationModel.Login == null || registrationModel.Password == null || registrationModel.PasswordConfirm == null || 
-                registrationModel.Email == null)
+            if (!ModelState.IsValid)
                 return new ApiResult<string>(
                     new Error
                     {
@@ -131,7 +131,7 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("password/recover")]
         public ApiResult<string> SendMailWithPageAccess([FromBody] SendingMailModel sendingMailModel)
         {
-            if (sendingMailModel.Login == null || sendingMailModel.PageAccess == null)
+            if (!ModelState.IsValid)
                 return new ApiResult<string>(
                     new Error
                     {
@@ -195,7 +195,7 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("password/recover/confirm")]
         public ApiResult<string> RecoveryPassword([FromBody] RecoveryPasswordModel recoveryPasswordModel)
         {
-            if (recoveryPasswordModel.Login == null || recoveryPasswordModel.NewPassword == null)
+            if (!ModelState.IsValid)
                 return new ApiResult<string>(
                     new Error
                     {

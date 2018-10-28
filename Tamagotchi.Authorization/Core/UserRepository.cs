@@ -26,6 +26,6 @@ namespace Tamagotchi.Authorization.Core
             _db.Entry(user).State = EntityState.Modified;
             user.Password = newPassword;
             _db.SaveChanges();
-        }
+        }        
     }
 }
