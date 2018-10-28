@@ -1,12 +1,5 @@
-version: '3'
+version: '3.4'
 services:
-  app:
-    image: itine/tamagotchi-authorization
-    restart: always
-    ports:
-    - "5001:80"
-    depends_on:
-    - db
   db:
     image: postgres:10.5
     restart: always
@@ -17,6 +10,15 @@ services:
       POSTGRES_PASSWORD: root
     volumes:
     - "postgres-data-auth:/var/lib/postgresql/data"
+
+  app:
+    image: tamagotchi-authorization
+    restart: always
+    ports:
+    - "5001:80"
+    depends_on:
+    - db
+  
   adminer:
     image: adminer:4
     restart: always

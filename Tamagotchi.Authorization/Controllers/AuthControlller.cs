@@ -76,7 +76,7 @@ namespace Tamagotchi.Authorization.Controllers
         public ApiResult<string> Registration([FromBody] RegistrationModel registrationModel)
         {
             if (registrationModel.Login == null || registrationModel.Password == null || registrationModel.PasswordConfirm == null || 
-                registrationModel.Email == null || registrationModel.Pet == null)
+                registrationModel.Email == null)
                 return new ApiResult<string>(
                     new Error
                     {

@@ -12,8 +12,6 @@ namespace Tamagotchi.Authorization.JsonModels
         public string PasswordConfirm { get; set; }
         [JsonProperty("email")]
         public string Email { get; set; }
-        [JsonProperty("pet")]
-        public string Pet { get; set; }
 
     }
 }

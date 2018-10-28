@@ -1,0 +1,15 @@
+obj/Debug/docker-compose.dcproj.FileListAbsolute.txt
+.vs/VSWorkspaceState.json
+.vs/Tamagotchi.Authorization/v15/Server/sqlite3/storage.ide-wal
+.vs/Tamagotchi.Authorization/v15/Server/sqlite3/storage.ide-shm
+.vs/Tamagotchi.Authorization/v15/Server/sqlite3/storage.ide
+obj/Docker/docker-compose.vs.debug.partial.g.yml
+obj/Docker/TargetOS.cache
+.vs/slnx.sqlite
+.vs/config/applicationhost.config
+.vs/Tamagotchi.Authorization/v15/Server/sqlite3/db.lock
+.vs/Tamagotchi.Authorization/v15/.suo
+obj/Docker/docker-compose.vs.release.partial.g.yml
+obj/Docker/MergedDockerCompose.cache
+obj/Docker/CachedComposeConfigFilePaths.cache
+.vs/Tamagotchi.Authorization/DesignTimeBuild/.dtbcache
