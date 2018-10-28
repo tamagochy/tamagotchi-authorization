@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -26,12 +26,8 @@ namespace Tamagotchi.Authorization.Controllers
         }
 
         [HttpGet("version")]
-        public string GetVersion()
-        {
-            dynamic jsonObject = new JObject();
-            jsonObject.version = _appInfo.ProjectVersion;
-            return jsonObject.ToString();
-        }
+        public VersionModel GetVersion() =>
+           new VersionModel { Version = _appInfo.ProjectVersion };
 
         [HttpPost("login")]
         public ApiResult<string> Login([FromBody] LoginModel loginModel)
@@ -82,8 +78,7 @@ namespace Tamagotchi.Authorization.Controllers
                     }
                 );
             }
-
-            var credentials = user.Password.Equals(loginModel.Password);
+            var credentials = Hashing.ValidatePassword(loginModel.Password, user.Password);
             if (!credentials)
             {
                 HttpContext.Response.StatusCode = 401;
@@ -140,7 +135,7 @@ namespace Tamagotchi.Authorization.Controllers
                         Email = registrationModel.Email
                     });
             }
-            catch
+            catch 
             {
                 HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(

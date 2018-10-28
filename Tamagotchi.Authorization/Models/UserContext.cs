@@ -20,7 +20,6 @@ namespace Tamagotchi.Authorization.Models
             modelBuilder.Entity<User>(entity =>
             {
                 entity.Property(e => e.Login).HasMaxLength(24);
-                entity.Property(e => e.Password).HasMaxLength(24);
                 entity.Property(e => e.Email).HasMaxLength(50);
             });
         }

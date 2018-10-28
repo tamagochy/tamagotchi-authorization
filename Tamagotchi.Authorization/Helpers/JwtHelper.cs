@@ -10,7 +10,7 @@ namespace Tamagotchi.Authorization.Helpers
     {
         public static string GenerateToken(int userId, string secretKey)
         {
-            var claims = new[] { new Claim("user_id", userId.ToString()) };
+            var claims = new[] { new Claim("user_id", userId.ToString(), ClaimValueTypes.Integer) };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var signInCredential = new SigningCredentials(key, "HS256");
             var dateNow = DateTime.UtcNow;
