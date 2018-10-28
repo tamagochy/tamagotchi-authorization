@@ -6,10 +6,10 @@ namespace Tamagotchi.Authorization.JsonModels
     public class LoginModel
     {
         [Required, JsonProperty("login")]
-        [Range(3,24)]
+        [MinLength(3), MaxLength(24)]
         public string Login { get; set; }
         [Required, JsonProperty("password")]
-        [Range(8,24)]
+        [MinLength(8), MaxLength(24)]
         public string Password { get; set; }
     }
 }

@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
@@ -31,45 +32,71 @@ namespace Tamagotchi.Authorization.Controllers
             jsonObject.version = _appInfo.ProjectVersion;
             return jsonObject.ToString();
         }
-        
+
         [HttpPost("login")]
         public ApiResult<string> Login([FromBody] LoginModel loginModel)
         {
             if (!ModelState.IsValid)
-                return new ApiResult<string>(new Error
-                {
-                    Attr = "Отсутсвует один из параметров запроса.",
-                    Code = "protocol.Incorrect"
-                });
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<string>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
+
             User user;
             try
             {
                 user = _userRepository.GetUserByLogin(loginModel.Login);
             }
-            catch (Exception exception)
+            catch
             {
+                HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
-                    new Error
+                    new List<Error>
                     {
-                        Attr = "Ошибка чтения БД. " + exception.Message,
-                        Code = "server.Error"
-                    });
+                        new Error
+                        {
+                            Code = "server.Error"
+                        }
+                    }
+                );
             }
             if (user == null)
+            {
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
-                    new Error
+                    new List<Error>
                     {
-                        Attr = "Логин не найден в системе.",
-                        Code = "business.Error"
-                    });
+                        new Error
+                        {
+                            Attr = "Логин не найден в системе.",
+                            Code = "business.Error"
+                        }
+                    }
+                );
+            }
+
             var credentials = user.Password.Equals(loginModel.Password);
             if (!credentials)
+            {
+                HttpContext.Response.StatusCode = 401;
                 return new ApiResult<string>(
-                    new Error
+                    new List<Error>
                     {
-                        Attr = "Ошибка авторизации. Неверный пароль.",
-                        Code = "https://i.ytimg.com/vi/qkudeorV03o/maxresdefault.jpg"
-                    });
+                        new Error
+                        {
+                            Code = "https://i.ytimg.com/vi/qkudeorV03o/maxresdefault.jpg"
+                        }
+                    }
+                );
+            }
             return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId, _appInfo.SecretKey));
         }
 
@@ -77,33 +104,32 @@ namespace Tamagotchi.Authorization.Controllers
         public ApiResult<string> Registration([FromBody] RegistrationModel registrationModel)
         {
             if (!ModelState.IsValid)
+            {
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
-                    new Error
+                    new List<Error>
                     {
-                        Attr = "Отсутсвует один из параметров запроса.",
-                        Code = "protocol.Incorrect"
-                    });
-            if (!registrationModel.Password.Equals(registrationModel.PasswordConfirm))
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
+            if ((!registrationModel.Password.Equals(registrationModel.PasswordConfirm))
+                || (_userRepository.GetUserByEmail(registrationModel.Email) != null) ||
+                    (_userRepository.GetUserByLogin(registrationModel.Login) != null))
+            {
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
+                new List<Error>
+                {
                     new Error
-                    {
-                        Attr = "Пароли не совпадают.",
-                        Code = "business.Error"
-                    });
-            if (_userRepository.GetUserByEmail(registrationModel.Email) != null)
-                return new ApiResult<string>(
-                    new Error
-                    {
-                        Attr = "Пользователь с указанным адресом электронной почты уже существует.",
-                        Code = "business.Error"
-                    });
-            if (_userRepository.GetUserByLogin(registrationModel.Login) != null)
-                return new ApiResult<string>(
-                    new Error
-                    {
-                        Attr = "Указанный логин уже существует, попробуйте использовать другой.",
-                        Code = "business.Error"
-                    });
+                     {
+                         Code = "business.Error"
+                     }
+                });
+            }
             try
             {
                 _userRepository.AddUser(
@@ -114,14 +140,17 @@ namespace Tamagotchi.Authorization.Controllers
                         Email = registrationModel.Email
                     });
             }
-            catch (Exception exception)
+            catch
             {
+                HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
+                new List<Error>
+                {
                     new Error
                     {
-                        Attr = "Ошибка записи в БД. " + exception.Message,
                         Code = "server.Error"
-                    });
+                    }
+                });
             }
             return new ApiResult<string>("Ok");
         }
@@ -132,45 +161,65 @@ namespace Tamagotchi.Authorization.Controllers
         public ApiResult<string> SendMailWithPageAccess([FromBody] SendingMailModel sendingMailModel)
         {
             if (!ModelState.IsValid)
-                return new ApiResult<string>(
-                    new Error
+            {
+                var errors = ModelState.Keys.ToList();
+                HttpContext.Response.StatusCode = 400;
+                var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+
+                foreach (var err in errors)
+                {
+                    apiResult.Errors.Add(new Error
                     {
-                        Attr = "Отсутсвует один из параметров запроса.",
-                        Code = "protocol.Incorrect"
+                        Attr = err,
+                        Code = "validation.Incorrect"
                     });
+                }
+                return apiResult;
+            }
             User user;
             try
             {
                 user = _userRepository.GetUserByLogin(sendingMailModel.Login);
             }
-            catch (Exception exception)
+            catch
             {
+                HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
-                    new Error
+                    new List<Error>
                     {
-                        Attr = "Ошибка чтения БД. " + exception.Message,
-                        Code = "server.Error"
+                        new Error
+                        {
+                            Code = "server.Error"
+                        }
                     });
             }
             if (user == null)
+            {
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
-                    new Error
+                    new List<Error>
                     {
-                        Attr = "Пользователь отсутствует в системе.",
-                        Code = "business.Error"
+                        new Error
+                        {
+                            Code = "business.Error"
+                        }
                     });
+            }
             try
             {
                 SendEmailAsync(user.Email, sendingMailModel.PageAccess, _appInfo.ApplicationEmail, _appInfo.EmailPassword).GetAwaiter();
             }
-            catch (Exception exception)
+            catch
             {
+                HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
-                    new Error
-                    {
-                        Attr = exception.Message,
-                        Code = "server.Error"
-                    });
+                   new List<Error>
+                   {
+                       new Error
+                       {
+                           Code = "server.Error"
+                       }
+                   });
             }
             return new ApiResult<string>("Ok");
         }
@@ -196,44 +245,60 @@ namespace Tamagotchi.Authorization.Controllers
         public ApiResult<string> RecoveryPassword([FromBody] RecoveryPasswordModel recoveryPasswordModel)
         {
             if (!ModelState.IsValid)
+            {
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
-                    new Error
-                    {
-                        Attr = "Отсутсвует один из параметров запроса.",
-                        Code = "protocol.Incorrect"
-                    });
+                   new List<Error>
+                   {
+                       new Error
+                       {
+                           Code = "protocol.Incorrect"
+                       }
+                   });
+            }
             User user;
             try
             {
                 user = _userRepository.GetUserByLogin(recoveryPasswordModel.Login);
             }
-            catch (Exception exception)
+            catch
             {
+                HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
-                    new Error
-                    {
-                        Attr = "Ошибка чтения из БД. " + exception.Message,
-                        Code = "server.Error"
-                    });
+                   new List<Error>
+                   {
+                       new Error
+                       {
+                           Code = "server.Error"
+                       }
+                   });
             }
             if (user == null)
+            {
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
-                    new Error
-                    {
-                        Attr = "Пользователь отсутствует в системе.",
-                        Code = "business.Error"
-                    });
+                   new List<Error>
+                   {
+                       new Error
+                       {
+                            Code = "business.Error"
+                       }
+                   });
+            }
             try
             {
                 _userRepository.UpdatePassword(user, recoveryPasswordModel.NewPassword);
             }
-            catch (Exception exception)
+            catch
             {
+                HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
-                    new Error
+                    new List<Error>
                     {
-                        Attr = "Ошибка записи в БД. " + exception.Message,
-                        Code = "server.Error"
+                        new Error
+                        {
+                            Code = "server.Error"
+                        }
                     });
             }
             return new ApiResult<string>("Ok");
