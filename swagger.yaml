@@ -11,36 +11,30 @@ info:
     name: MIT
     url: 'https://en.wikipedia.org/wiki/MIT_License'
 paths:
-  /auth/getversion:
+  /version:
     get:
       tags:
         - auth
-      operationId: AuthGetversionGet
+      operationId: VersionGet
       consumes: []
       produces:
-        - text/plain
         - application/json
-        - text/json
       parameters: []
       responses:
         '200':
           description: Success
           schema:
-            type: string
-  /auth/login:
+            $ref: '#/definitions/VersionModel'
+       
+  /login:
     post:
       tags:
         - auth
-      operationId: AuthLoginPost
+      operationId: LoginPost
       consumes:
-        - application/json-patch+json
         - application/json
-        - text/json
-        - application/*+json
       produces:
-        - text/plain
         - application/json
-        - text/json
       parameters:
         - name: loginModel
           in: body
@@ -51,21 +45,22 @@ paths:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[string]'
-  /auth/registration:
+            $ref: '#/definitions/ApiResult'
+        '400':
+          description: Validation Error
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server Error
+  /register:
     post:
       tags:
         - auth
-      operationId: AuthRegistrationPost
+      operationId: RegisterPost
       consumes:
-        - application/json-patch+json
         - application/json
-        - text/json
-        - application/*+json
       produces:
-        - text/plain
         - application/json
-        - text/json
       parameters:
         - name: registrationModel
           in: body
@@ -76,21 +71,21 @@ paths:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[string]'
-  /auth/sendpageaccess:
+            $ref: '/definitions/ApiResult'
+        '400':
+          description: Validation Error
+        '500':
+          description: Server Error
+ 
+  /password/recover:
     post:
       tags:
         - auth
-      operationId: AuthSendpageaccessPost
+      operationId: PasswordRecoverPost
       consumes:
-        - application/json-patch+json
         - application/json
-        - text/json
-        - application/*+json
       produces:
-        - text/plain
         - application/json
-        - text/json
       parameters:
         - name: sendingMailModel
           in: body
@@ -101,21 +96,22 @@ paths:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[string]'
-  /auth/passwordrecovery:
+            $ref: '/definitions/ApiResult'
+        '400':
+          description: Validation Error
+        '500':
+          description: Server Error
+ 
+ 
+  /password/recover/confirm:
     post:
       tags:
         - auth
-      operationId: AuthPasswordrecoveryPost
+      operationId: PasswordRecoverConfirmPost
       consumes:
-        - application/json-patch+json
         - application/json
-        - text/json
-        - application/*+json
       produces:
-        - text/plain
         - application/json
-        - text/json
       parameters:
         - name: recoveryPasswordModel
           in: body
@@ -126,16 +122,35 @@ paths:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult[string]'
+            $ref: '/definitions/ApiResult'
+        '400':
+          description: Validation Error
+        '500':
+          description: Server Error
+ 
 definitions:
+  VersionModel:
+    required:
+      - version
+    type: object
+    properties:
+      version:
+        type: string
   LoginModel:
+    required:
+      - login
+      - password
     type: object
     properties:
       login:
+        maxLength: 24
+        minLength: 3
         type: string
       password:
+        maxLength: 24
+        minLength: 8
         type: string
-  'ApiResult[String]':
+  'ApiResult':
     type: object
     properties:
       data:
@@ -153,29 +168,50 @@ definitions:
       code:
         type: string
   RegistrationModel:
+    required:
+      - login
+      - password
+      - passwordConfirm
+      - email
     type: object
     properties:
       login:
+        maxLength: 24
+        minLength: 3
         type: string
       password:
+        maxLength: 24
+        minLength: 8
         type: string
       passwordConfirm:
+        maxLength: 24
+        minLength: 8
         type: string
       email:
         type: string
-      pet:
-        type: string
   SendingMailModel:
+    required:
+      - login
+      - pageAccess
     type: object
     properties:
       login:
+        maxLength: 24
+        minLength: 3
         type: string
       pageAccess:
         type: string
   RecoveryPasswordModel:
+    required:
+      - login
+      - newPassword
     type: object
     properties:
       login:
+        maxLength: 24
+        minLength: 3
         type: string
       newPassword:
+        maxLength: 24
+        minLength: 8
         type: string
