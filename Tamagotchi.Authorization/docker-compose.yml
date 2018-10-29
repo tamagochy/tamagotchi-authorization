@@ -6,13 +6,13 @@ services:
     ports:
     - "5432:5432"
     environment:
-      POSTGRES_DB: tamagochi
+      POSTGRES_DB: tamagotchi
       POSTGRES_PASSWORD: root
     volumes:
     - "postgres-data-auth:/var/lib/postgresql/data"
 
   app:
-    image: tamagotchi-authorization
+    image: itine/tamagotchi-authorization
     restart: always
     ports:
     - "5001:80"

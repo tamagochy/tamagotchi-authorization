@@ -81,7 +81,6 @@ namespace Tamagotchi.Authorization
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "TamagotchiAuth");
             });
-            app.UseSwagger();
         }
 
         private static void UpdateDatabase(IApplicationBuilder app)
