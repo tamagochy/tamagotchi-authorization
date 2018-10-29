@@ -25,7 +25,6 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/VersionModel'
-       
   /login:
     post:
       tags:
@@ -71,12 +70,11 @@ paths:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult'
+            $ref: '#/definitions/ApiResult'
         '400':
           description: Validation Error
         '500':
           description: Server Error
- 
   /password/recover:
     post:
       tags:
@@ -96,13 +94,11 @@ paths:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult'
+            $ref: '#/definitions/ApiResult'
         '400':
           description: Validation Error
         '500':
           description: Server Error
- 
- 
   /password/recover/confirm:
     post:
       tags:
@@ -122,12 +118,11 @@ paths:
         '200':
           description: Success
           schema:
-            $ref: '/definitions/ApiResult'
+            $ref: '#/definitions/ApiResult'
         '400':
           description: Validation Error
         '500':
           description: Server Error
- 
 definitions:
   VersionModel:
     required:
@@ -150,7 +145,7 @@ definitions:
         maxLength: 24
         minLength: 8
         type: string
-  'ApiResult':
+  ApiResult:
     type: object
     properties:
       data:
