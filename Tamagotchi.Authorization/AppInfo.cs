@@ -4,8 +4,8 @@ namespace Tamagotchi.Authorization
     public class AppInfo
     {
         //Время жизни токена в часах
-        public const int LifeTime = 24;
-        public const int ConfirmCodeLifeTime = 1;
+        public int LifeTimeToken {get;set;}
+        public int ConfirmCodeLifeTime { get; set; }
         public int CountRound { get; set; }
         public string ApplicationUrl { get; set; }
         public string ProjectVersion { get; set; }

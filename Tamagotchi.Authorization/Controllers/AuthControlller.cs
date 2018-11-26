@@ -38,6 +38,19 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("login")]
         public async Task<ApiResult<string>> Login([FromBody] JObject loginModel)
         {
+            if (loginModel == null)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<string>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
             var validationResult = ValidateLoginModel(loginModel);
             if (validationResult.Item2.Any())
             {
@@ -111,12 +124,25 @@ namespace Tamagotchi.Authorization.Controllers
                     }
                 );
             }
-            return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId, _appInfo.SecretKey));
+            return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId, _appInfo.SecretKey, _appInfo.LifeTimeToken));
         }
 
         [HttpPost("getUserLogins")]
-        public async Task<ApiResult<string>> GetUserLogins([FromBody] JArray idsArray)
+        public async Task<ApiResult<dynamic>> GetUserLogins([FromBody] JArray idsArray)
         {
+            if (idsArray == null)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<dynamic>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
             try
             {
                 var validationResult = ValidateUserIds(idsArray);
@@ -132,24 +158,24 @@ namespace Tamagotchi.Authorization.Controllers
                             Code = error.Error
                         });
                     }
-                    return apiResult;
+                    return new ApiResult<dynamic>(apiResult);
                 }
                 if (!ModelState.IsValid)
                 {
                     HttpContext.Response.StatusCode = 400;
-                    return new ApiResult<string>(
+                    return new ApiResult<dynamic>(
                         new List<Error>
                         {
-                        new Error
-                        {
-                            Code = "protocol.Incorrect"
-                        }
+                            new Error
+                            {
+                                Code = "protocol.Incorrect"
+                            }
                         }
                     );
                 }
                 var users = await _userRepository.GetUsersByIds(validationResult.Item1);
                 var result = new List<UserModel>(users.Count());
-                foreach(var us in users)
+                foreach (var us in users)
                 {
                     result.Add(new UserModel
                     {
@@ -157,12 +183,12 @@ namespace Tamagotchi.Authorization.Controllers
                         Login = us.Login
                     });
                 }
-                return new ApiResult<string>(JsonConvert.SerializeObject(result));
+                return new ApiResult<dynamic>(result);
             }
             catch
             {
                 HttpContext.Response.StatusCode = 500;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
@@ -178,13 +204,26 @@ namespace Tamagotchi.Authorization.Controllers
         #region Registration
 
         [HttpPost("registration")]
-        public async Task<ApiResult<string>> Registration([FromBody] JObject registrationModel)
+        public async Task<ApiResult<dynamic>> Registration([FromBody] JObject registrationModel)
         {
+            if (registrationModel == null)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<dynamic>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
             var validationResult = ValidateRegistrationModel(registrationModel);
             if (validationResult.Item2.Any())
             {
                 HttpContext.Response.StatusCode = 400;
-                var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                var apiResult = new ApiResult<dynamic> { Errors = new List<Error>() };
                 foreach (var error in validationResult.Item2)
                 {
                     apiResult.Errors.Add(new Error
@@ -198,7 +237,7 @@ namespace Tamagotchi.Authorization.Controllers
             if (!ModelState.IsValid)
             {
                 HttpContext.Response.StatusCode = 400;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
@@ -211,7 +250,7 @@ namespace Tamagotchi.Authorization.Controllers
             if (!validationResult.Item1.Password.Equals(validationResult.Item1.PasswordConfirm))
             {
                 HttpContext.Response.StatusCode = 400;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                 new List<Error>
                 {
                     new Error
@@ -224,7 +263,7 @@ namespace Tamagotchi.Authorization.Controllers
                     (await _userRepository.GetUserByLogin(validationResult.Item1.Login) != null))
             {
                 HttpContext.Response.StatusCode = 400;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                 new List<Error>
                 {
                     new Error
@@ -246,7 +285,7 @@ namespace Tamagotchi.Authorization.Controllers
             catch
             {
                 HttpContext.Response.StatusCode = 500;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                 new List<Error>
                 {
                     new Error
@@ -255,8 +294,7 @@ namespace Tamagotchi.Authorization.Controllers
                     }
                 });
             }
-
-            return new ApiResult<string>(JsonConvert.SerializeObject(new { succeed = true }));
+            return new ApiResult<dynamic>(new { succeed = true });
         }
 
         #endregion
@@ -264,13 +302,26 @@ namespace Tamagotchi.Authorization.Controllers
         #region Access Recovery
 
         [HttpPost("restoreAccess")]
-        public async Task<ApiResult<string>> RestoreAccess([FromBody] JObject sendingMailModel)
+        public async Task<ApiResult<dynamic>> RestoreAccess([FromBody] JObject sendingMailModel)
         {
+            if (sendingMailModel == null)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<dynamic>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
             var validationResult = ValidateUserIdentityData(sendingMailModel);
             if (validationResult.Item2.Any())
             {
                 HttpContext.Response.StatusCode = 400;
-                var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                var apiResult = new ApiResult<dynamic> { Errors = new List<Error>() };
                 foreach (var error in validationResult.Item2)
                 {
                     apiResult.Errors.Add(new Error
@@ -284,7 +335,7 @@ namespace Tamagotchi.Authorization.Controllers
             if (!ModelState.IsValid)
             {
                 HttpContext.Response.StatusCode = 400;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
@@ -304,7 +355,7 @@ namespace Tamagotchi.Authorization.Controllers
             catch
             {
                 HttpContext.Response.StatusCode = 500;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
@@ -316,7 +367,7 @@ namespace Tamagotchi.Authorization.Controllers
             if (user == null)
             {
                 HttpContext.Response.StatusCode = 400;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
@@ -333,7 +384,7 @@ namespace Tamagotchi.Authorization.Controllers
             catch (Exception ex)
             {
                 HttpContext.Response.StatusCode = 500;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
@@ -344,7 +395,7 @@ namespace Tamagotchi.Authorization.Controllers
             }
             await SendEmailAsync(user.Email, user.Login, _appInfo.ApplicationUrl + "/restoreAccessConfirm/?confirmationCode=" + confirmationCode,
                 _appInfo.ApplicationEmail, _appInfo.EmailPassword);
-            return new ApiResult<string> (JsonConvert.SerializeObject(new { succeed = true })); 
+            return new ApiResult<dynamic>(new { succeed = true });
         }
 
         private static async Task SendEmailAsync(string userMail, string login, string pageAccess, string appEmail, string appPassword)
@@ -367,15 +418,28 @@ namespace Tamagotchi.Authorization.Controllers
         }
 
         [HttpPost("restoreAccessConfirm")]
-        public async Task<ApiResult<string>> RestoreAccessConfirm([FromBody] JObject recoveryPasswordModel)
+        public async Task<ApiResult<dynamic>> RestoreAccessConfirm([FromBody] JObject recoveryPasswordModel)
         {
+            if (recoveryPasswordModel == null)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<dynamic>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
             try
             {
                 var validationResult = ValidateRestoreAccessModel(recoveryPasswordModel);
                 if (validationResult.Item2.Any())
                 {
                     HttpContext.Response.StatusCode = 400;
-                    var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                    var apiResult = new ApiResult<dynamic> { Errors = new List<Error>() };
                     foreach (var error in validationResult.Item2)
                     {
                         apiResult.Errors.Add(new Error
@@ -389,7 +453,7 @@ namespace Tamagotchi.Authorization.Controllers
                 if (!ModelState.IsValid)
                 {
                     HttpContext.Response.StatusCode = 400;
-                    return new ApiResult<string>(
+                    return new ApiResult<dynamic>(
                         new List<Error>
                         {
                             new Error
@@ -402,7 +466,7 @@ namespace Tamagotchi.Authorization.Controllers
                 if (!validationResult.Item1.NewPassword.Equals(validationResult.Item1.RepeatedNewPassword))
                 {
                     HttpContext.Response.StatusCode = 400;
-                    return new ApiResult<string>(
+                    return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
@@ -415,7 +479,7 @@ namespace Tamagotchi.Authorization.Controllers
                 if (confirmation == null)
                 {
                     HttpContext.Response.StatusCode = 400;
-                    return new ApiResult<string>(
+                    return new ApiResult<dynamic>(
                         new List<Error>
                         {
                             new Error
@@ -427,7 +491,7 @@ namespace Tamagotchi.Authorization.Controllers
                 if (!confirmation.Active)
                 {
                     HttpContext.Response.StatusCode = 400;
-                    return new ApiResult<string>(
+                    return new ApiResult<dynamic>(
                         new List<Error>
                         {
                             new Error
@@ -436,13 +500,13 @@ namespace Tamagotchi.Authorization.Controllers
                             }
                         });
                 }
-                var dateTimeNow = DateTime.UtcNow.Millisecond;
-                var creationTime = confirmation.CreationTime.Millisecond;
+                var dateTimeNow = DateTime.UtcNow.Ticks;
+                var creationTime = confirmation.CreationTime.Ticks;
                 if (!(dateTimeNow >= creationTime && dateTimeNow <=
-                    creationTime + TimeSpan.FromHours(AppInfo.ConfirmCodeLifeTime).TotalMilliseconds))
+                    creationTime + TimeSpan.FromHours(_appInfo.ConfirmCodeLifeTime).Ticks))
                 {
                     HttpContext.Response.StatusCode = 400;
-                    return new ApiResult<string>(
+                    return new ApiResult<dynamic>(
                         new List<Error>
                         {
                             new Error
@@ -455,7 +519,7 @@ namespace Tamagotchi.Authorization.Controllers
                 if (user == null)
                 {
                     HttpContext.Response.StatusCode = 400;
-                    return new ApiResult<string>(
+                    return new ApiResult<dynamic>(
                         new List<Error>
                         {
                             new Error
@@ -467,12 +531,12 @@ namespace Tamagotchi.Authorization.Controllers
                 }
                 await _userRepository.UpdatePassword(user, validationResult.Item1.NewPassword, _appInfo.CountRound);
                 await _codeRepository.SetConfirmCodeNotActive(confirmation);
-                return new ApiResult<string>(JsonConvert.SerializeObject(new { succeed = true }));
+                return new ApiResult<dynamic>(new { succeed = true });
             }
             catch
             {
                 HttpContext.Response.StatusCode = 500;
-                return new ApiResult<string>(
+                return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error

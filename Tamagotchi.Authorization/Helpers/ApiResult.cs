@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using Tamagotchi.Authorization.JsonModels;
 
 namespace Tamagotchi.Authorization.Helpers
 {
@@ -9,17 +11,13 @@ namespace Tamagotchi.Authorization.Helpers
         public T Data { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<Error> Errors { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string succeed { get; set; }
         public ApiResult()
         {
         }
-
         public ApiResult(T data)
         {
-            Data = data;
+            Data = data; 
         }
-
         public ApiResult(List<Error> error)
         {
             Errors = error;

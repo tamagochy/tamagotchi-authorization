@@ -32,20 +32,6 @@ namespace Tamagotchi.Authorization
                 options.UseNpgsql(Configuration.GetConnectionString("LocalDB")));
             services.AddScoped<IConfirmationCodeRepository, ConfirmationCodeRepository>();
             var appInfo = Configuration.GetSection("AppInfo");
-            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            //      .AddJwtBearer(options =>
-            //      {
-            //          options.RequireHttpsMetadata = false;
-            //          options.TokenValidationParameters = new TokenValidationParameters
-            //          {
-            //              // будет ли валидироваться время существования
-            //              ValidateLifetime = true,
-            //              // валидация ключа безопасности
-            //              ValidateIssuerSigningKey = true,
-            //              // установка ключа безопасности
-            //              IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appInfo.GetSection("SecretKey").Value))
-            //          };
-            //      });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info
