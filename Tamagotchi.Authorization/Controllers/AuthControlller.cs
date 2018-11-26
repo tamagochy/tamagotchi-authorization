@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +17,15 @@ namespace Tamagotchi.Authorization.Controllers
 {
     [Consumes("application/json")]
     [Produces("application/json")]
-    public class AuthController : Controller
+    public class AuthController : AuthControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IConfirmationCodeRepository _codeRepository;
         private readonly AppInfo _appInfo;
-        public AuthController(IUserRepository userRepository, IOptions<AppInfo> appInfo)
+        public AuthController(IUserRepository userRepository, IConfirmationCodeRepository codeRepository, IOptions<AppInfo> appInfo)
         {
             _userRepository = userRepository;
+            _codeRepository = codeRepository;
             _appInfo = appInfo.Value;
         }
 
@@ -29,9 +33,26 @@ namespace Tamagotchi.Authorization.Controllers
         public VersionModel GetVersion() =>
            new VersionModel { Version = _appInfo.ProjectVersion };
 
+        #region Login
+
         [HttpPost("login")]
-        public ApiResult<string> Login([FromBody] LoginModel loginModel)
+        public async Task<ApiResult<string>> Login([FromBody] JObject loginModel)
         {
+            var validationResult = ValidateLoginModel(loginModel);
+            if (validationResult.Item2.Any())
+            {
+                HttpContext.Response.StatusCode = 400;
+                var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                foreach (var error in validationResult.Item2)
+                {
+                    apiResult.Errors.Add(new Error
+                    {
+                        Attr = error.Attribute,
+                        Code = error.Error
+                    });
+                }
+                return apiResult;
+            }
             if (!ModelState.IsValid)
             {
                 HttpContext.Response.StatusCode = 400;
@@ -49,7 +70,7 @@ namespace Tamagotchi.Authorization.Controllers
             User user;
             try
             {
-                user = _userRepository.GetUserByLogin(loginModel.Login);
+                user = await _userRepository.GetUserByLogin(validationResult.Item1.Login);
             }
             catch
             {
@@ -72,22 +93,20 @@ namespace Tamagotchi.Authorization.Controllers
                     {
                         new Error
                         {
-                            Attr = "Логин не найден в системе.",
-                            Code = "business.Error"
+                            Code = "business.UserNotFound"
                         }
                     }
                 );
             }
-            var credentials = Hashing.ValidatePassword(loginModel.Password, user.Password);
-            if (!credentials)
+            if (!Hashing.ValidatePassword(validationResult.Item1.Password, user.Password))
             {
-                HttpContext.Response.StatusCode = 401;
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
                     new List<Error>
                     {
                         new Error
                         {
-                            Code = "https://i.ytimg.com/vi/qkudeorV03o/maxresdefault.jpg"
+                            Code = "business.BadCredentials"
                         }
                     }
                 );
@@ -95,9 +114,87 @@ namespace Tamagotchi.Authorization.Controllers
             return new ApiResult<string>(JwtHelper.GenerateToken(user.UserId, _appInfo.SecretKey));
         }
 
-        [HttpPost("register")]
-        public ApiResult<string> Registration([FromBody] RegistrationModel registrationModel)
+        [HttpPost("getUserLogins")]
+        public async Task<ApiResult<string>> GetUserLogins([FromBody] JArray idsArray)
         {
+            try
+            {
+                var validationResult = ValidateUserIds(idsArray);
+                if (validationResult.Item2.Any())
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                    foreach (var error in validationResult.Item2)
+                    {
+                        apiResult.Errors.Add(new Error
+                        {
+                            Attr = error.Attribute,
+                            Code = error.Error
+                        });
+                    }
+                    return apiResult;
+                }
+                if (!ModelState.IsValid)
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<string>(
+                        new List<Error>
+                        {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                        }
+                    );
+                }
+                var users = await _userRepository.GetUsersByIds(validationResult.Item1);
+                var result = new List<UserModel>(users.Count());
+                foreach(var us in users)
+                {
+                    result.Add(new UserModel
+                    {
+                        UserId = us.UserId,
+                        Login = us.Login
+                    });
+                }
+                return new ApiResult<string>(JsonConvert.SerializeObject(result));
+            }
+            catch
+            {
+                HttpContext.Response.StatusCode = 500;
+                return new ApiResult<string>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "server.Error"
+                        }
+                    });
+            }
+        }
+
+        #endregion
+
+        #region Registration
+
+        [HttpPost("registration")]
+        public async Task<ApiResult<string>> Registration([FromBody] JObject registrationModel)
+        {
+            var validationResult = ValidateRegistrationModel(registrationModel);
+            if (validationResult.Item2.Any())
+            {
+                HttpContext.Response.StatusCode = 400;
+                var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                foreach (var error in validationResult.Item2)
+                {
+                    apiResult.Errors.Add(new Error
+                    {
+                        Attr = error.Attribute,
+                        Code = error.Error
+                    });
+                }
+                return apiResult;
+            }
             if (!ModelState.IsValid)
             {
                 HttpContext.Response.StatusCode = 400;
@@ -111,9 +208,20 @@ namespace Tamagotchi.Authorization.Controllers
                     }
                 );
             }
-            if ((!registrationModel.Password.Equals(registrationModel.PasswordConfirm))
-                || (_userRepository.GetUserByEmail(registrationModel.Email) != null) ||
-                    (_userRepository.GetUserByLogin(registrationModel.Login) != null))
+            if (!validationResult.Item1.Password.Equals(validationResult.Item1.PasswordConfirm))
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<string>(
+                new List<Error>
+                {
+                    new Error
+                    {
+                        Code = "business.PasswordsNotEquals"
+                    }
+                });
+            }
+            if ((await _userRepository.GetUserByEmail(validationResult.Item1.Email) != null) ||
+                    (await _userRepository.GetUserByLogin(validationResult.Item1.Login) != null))
             {
                 HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
@@ -121,21 +229,21 @@ namespace Tamagotchi.Authorization.Controllers
                 {
                     new Error
                      {
-                         Code = "business.Error"
+                         Code = "business.UserAlreadyExists"
                      }
                 });
             }
             try
             {
-                _userRepository.AddUser(
+                await _userRepository.AddUser(
                     new User
                     {
-                        Login = registrationModel.Login,
-                        Password = registrationModel.Password,
-                        Email = registrationModel.Email
-                    });
+                        Login = validationResult.Item1.Login,
+                        Password = validationResult.Item1.Password,
+                        Email = validationResult.Item1.Email
+                    }, _appInfo.CountRound);
             }
-            catch 
+            catch
             {
                 HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
@@ -147,34 +255,51 @@ namespace Tamagotchi.Authorization.Controllers
                     }
                 });
             }
-            return new ApiResult<string>("Ok");
+
+            return new ApiResult<string>(JsonConvert.SerializeObject(new { succeed = true }));
         }
+
+        #endregion
 
         #region Access Recovery
 
-        [HttpPost("password/recover")]
-        public ApiResult<string> SendMailWithPageAccess([FromBody] SendingMailModel sendingMailModel)
+        [HttpPost("restoreAccess")]
+        public async Task<ApiResult<string>> RestoreAccess([FromBody] JObject sendingMailModel)
         {
-            if (!ModelState.IsValid)
+            var validationResult = ValidateUserIdentityData(sendingMailModel);
+            if (validationResult.Item2.Any())
             {
-                var errors = ModelState.Keys.ToList();
                 HttpContext.Response.StatusCode = 400;
                 var apiResult = new ApiResult<string> { Errors = new List<Error>() };
-
-                foreach (var err in errors)
+                foreach (var error in validationResult.Item2)
                 {
                     apiResult.Errors.Add(new Error
                     {
-                        Attr = err,
-                        Code = "validation.Incorrect"
+                        Attr = error.Attribute,
+                        Code = error.Error
                     });
                 }
                 return apiResult;
             }
+            if (!ModelState.IsValid)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResult<string>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "protocol.Incorrect"
+                        }
+                    }
+                );
+            }
             User user;
             try
             {
-                user = _userRepository.GetUserByLogin(sendingMailModel.Login);
+                user = await _userRepository.GetUserByLogin(validationResult.Item1.UserIdentityData);
+                if (user == null)
+                    user = await _userRepository.GetUserByEmail(validationResult.Item1.UserIdentityData);
             }
             catch
             {
@@ -196,37 +321,42 @@ namespace Tamagotchi.Authorization.Controllers
                     {
                         new Error
                         {
-                            Code = "business.Error"
+                            Code = "business.UserNotFound"
                         }
                     });
             }
+            var confirmationCode = Hashing.HashPassword((user.UserId + DateTime.UtcNow.Millisecond).ToString(), _appInfo.CountRound);
             try
             {
-                SendEmailAsync(user.Email, sendingMailModel.PageAccess, _appInfo.ApplicationEmail, _appInfo.EmailPassword).GetAwaiter();
+                await _codeRepository.AddConfirmationCode(user.UserId, confirmationCode);
             }
-            catch
+            catch (Exception ex)
             {
                 HttpContext.Response.StatusCode = 500;
                 return new ApiResult<string>(
-                   new List<Error>
-                   {
-                       new Error
-                       {
-                           Code = "server.Error"
-                       }
-                   });
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "server.Error" + ex.Message
+                        }
+                    });
             }
-            return new ApiResult<string>("Ok");
+            await SendEmailAsync(user.Email, user.Login, _appInfo.ApplicationUrl + "/restoreAccessConfirm/?confirmationCode=" + confirmationCode,
+                _appInfo.ApplicationEmail, _appInfo.EmailPassword);
+            return new ApiResult<string> (JsonConvert.SerializeObject(new { succeed = true })); 
         }
 
-        private static async Task SendEmailAsync(string userMail, string pageAccess, string appEmail, string appPassword)
+        private static async Task SendEmailAsync(string userMail, string login, string pageAccess, string appEmail, string appPassword)
         {
             var from = new MailAddress(appEmail);
             var to = new MailAddress(userMail);
             var message = new MailMessage(from, to)
             {
                 Subject = "Восстановление доступа",
-                Body = "Вы хотите восстановить пароль доступа. Пожалуйста, посетите страницу восстановления: " + pageAccess
+                Body = login + ", Вы запросили процедуру восстановления пароля в приложении \"Тамагочи\". " +
+                    "Для продолжения восстановления пароля перейдите по ссылке: " + pageAccess +
+                    ". Если Вы не запрашивали процедуру восстановления пароля, пожалуйста, игнорируйте это письмо."
             };
             var smtp = new SmtpClient("smtp.gmail.com", 587)
             {
@@ -236,53 +366,108 @@ namespace Tamagotchi.Authorization.Controllers
             await smtp.SendMailAsync(message);
         }
 
-        [HttpPost("password/recover/confirm")]
-        public ApiResult<string> RecoveryPassword([FromBody] RecoveryPasswordModel recoveryPasswordModel)
+        [HttpPost("restoreAccessConfirm")]
+        public async Task<ApiResult<string>> RestoreAccessConfirm([FromBody] JObject recoveryPasswordModel)
         {
-            if (!ModelState.IsValid)
-            {
-                HttpContext.Response.StatusCode = 400;
-                return new ApiResult<string>(
-                   new List<Error>
-                   {
-                       new Error
-                       {
-                           Code = "protocol.Incorrect"
-                       }
-                   });
-            }
-            User user;
             try
             {
-                user = _userRepository.GetUserByLogin(recoveryPasswordModel.Login);
-            }
-            catch
-            {
-                HttpContext.Response.StatusCode = 500;
-                return new ApiResult<string>(
-                   new List<Error>
-                   {
-                       new Error
-                       {
-                           Code = "server.Error"
-                       }
-                   });
-            }
-            if (user == null)
-            {
-                HttpContext.Response.StatusCode = 400;
-                return new ApiResult<string>(
-                   new List<Error>
-                   {
-                       new Error
-                       {
-                            Code = "business.Error"
-                       }
-                   });
-            }
-            try
-            {
-                _userRepository.UpdatePassword(user, recoveryPasswordModel.NewPassword);
+                var validationResult = ValidateRestoreAccessModel(recoveryPasswordModel);
+                if (validationResult.Item2.Any())
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                    foreach (var error in validationResult.Item2)
+                    {
+                        apiResult.Errors.Add(new Error
+                        {
+                            Attr = error.Attribute,
+                            Code = error.Error
+                        });
+                    }
+                    return apiResult;
+                }
+                if (!ModelState.IsValid)
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<string>(
+                        new List<Error>
+                        {
+                            new Error
+                            {
+                                Code = "protocol.Incorrect"
+                            }
+                        }
+                    );
+                }
+                if (!validationResult.Item1.NewPassword.Equals(validationResult.Item1.RepeatedNewPassword))
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<string>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = "business.PasswordsNotEquals"
+                        }
+                    });
+                }
+                var confirmation = await _codeRepository.GetConfirmData(validationResult.Item1.ConfirmationCode);
+                if (confirmation == null)
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<string>(
+                        new List<Error>
+                        {
+                            new Error
+                            {
+                                Code = "business.ConfirmCodeNotFound"
+                            }
+                        });
+                }
+                if (!confirmation.Active)
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<string>(
+                        new List<Error>
+                        {
+                            new Error
+                            {
+                                Code = "business.Inactive"
+                            }
+                        });
+                }
+                var dateTimeNow = DateTime.UtcNow.Millisecond;
+                var creationTime = confirmation.CreationTime.Millisecond;
+                if (!(dateTimeNow >= creationTime && dateTimeNow <=
+                    creationTime + TimeSpan.FromHours(AppInfo.ConfirmCodeLifeTime).TotalMilliseconds))
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<string>(
+                        new List<Error>
+                        {
+                            new Error
+                            {
+                                Code = "business.Expired"
+                            }
+                        });
+                }
+                var user = await _userRepository.GetUserById(confirmation.UserId);
+                if (user == null)
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<string>(
+                        new List<Error>
+                        {
+                            new Error
+                            {
+                                Code = "business.UserNotFound"
+                            }
+                        }
+                    );
+                }
+                await _userRepository.UpdatePassword(user, validationResult.Item1.NewPassword, _appInfo.CountRound);
+                await _codeRepository.SetConfirmCodeNotActive(confirmation);
+                return new ApiResult<string>(JsonConvert.SerializeObject(new { succeed = true }));
             }
             catch
             {
@@ -296,9 +481,12 @@ namespace Tamagotchi.Authorization.Controllers
                         }
                     });
             }
-            return new ApiResult<string>("Ok");
         }
 
         #endregion
+
+
     }
 }
+
+

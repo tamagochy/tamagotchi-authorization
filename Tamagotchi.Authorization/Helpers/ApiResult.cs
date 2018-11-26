@@ -9,6 +9,8 @@ namespace Tamagotchi.Authorization.Helpers
         public T Data { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<Error> Errors { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string succeed { get; set; }
         public ApiResult()
         {
         }

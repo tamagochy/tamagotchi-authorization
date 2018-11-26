@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Tamagotchi.Authorization.Helpers;
 using Tamagotchi.Authorization.Models;
 
@@ -12,22 +14,36 @@ namespace Tamagotchi.Authorization.Core
         {
             _db = context;
         }
-        public User GetUserByLogin(string login) =>
-            _db.TamagotchiUser.FirstOrDefault(user => user.Login.Equals(login));
+        public async Task<User> GetUserById(int id) =>
+            await _db.TamagotchiUser.FirstOrDefaultAsync(user => user.UserId.Equals(id));
+        public async Task<User> GetUserByLogin(string login) =>
+             await _db.TamagotchiUser.FirstOrDefaultAsync(user => user.Login.Equals(login));
 
-        public User GetUserByEmail(string eMail) =>
-            _db.TamagotchiUser.FirstOrDefault(user => user.Email.Equals(eMail));
-        public void AddUser(User user)
+        public async Task<User> GetUserByEmail(string eMail) =>
+            await _db.TamagotchiUser.FirstOrDefaultAsync(user => user.Email.Equals(eMail));
+        public async Task AddUser(User user, int countRound)
         {
-            user.Password = Hashing.HashPassword(user.Password);
+            user.Password = Hashing.HashPassword(user.Password, countRound);
             _db.TamagotchiUser.Add(user);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
-        public void UpdatePassword(User user, string newPassword)
+        public async Task UpdatePassword(User user, string newPassword, int countRound)
         {
             _db.Entry(user).State = EntityState.Modified;
-            user.Password = Hashing.HashPassword(newPassword);
-            _db.SaveChanges();
-        }        
+            user.Password = Hashing.HashPassword(newPassword, countRound);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<User>> GetUsersByIds(int[] ids)
+        {
+            var result = new List<User>();
+            foreach(var id in ids)
+            {
+                var user = await _db.TamagotchiUser.FirstOrDefaultAsync(x => x.UserId == id);
+                if (user != null)
+                    result.Add(user);
+            }
+            return result;
+        }
     }
 }

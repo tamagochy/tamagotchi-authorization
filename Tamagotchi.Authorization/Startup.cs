@@ -14,8 +14,6 @@ namespace Tamagotchi.Authorization
     {
         public IConfiguration Configuration { get; }
         public IHostingEnvironment Environment { get; }
-        public object CompatibilityVersion { get; private set; }
-
         public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
@@ -32,6 +30,7 @@ namespace Tamagotchi.Authorization
         {
             services.AddDbContext<UserContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("LocalDB")));
+            services.AddScoped<IConfirmationCodeRepository, ConfirmationCodeRepository>();
             var appInfo = Configuration.GetSection("AppInfo");
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //      .AddJwtBearer(options =>
@@ -66,7 +65,7 @@ namespace Tamagotchi.Authorization
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            UpdateDatabase(app);
+            //UpdateDatabase(app);
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
