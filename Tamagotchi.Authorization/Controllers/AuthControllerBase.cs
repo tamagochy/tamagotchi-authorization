@@ -50,7 +50,7 @@ namespace Tamagotchi.Authorization.Controllers
             if (registrationModel.PasswordConfirm == null)
                 errors.Add(new ErrorDescription { Error = "validation.Missing", Attribute = "passwordConfirm" });
             else if (registrationModel.PasswordConfirm.Length < 8 || registrationModel.PasswordConfirm.Length > 24)
-                errors.Add(new ErrorDescription { Error = "validation.Incorrect", Attribute = "password" });
+                errors.Add(new ErrorDescription { Error = "validation.Incorrect", Attribute = "passwordConfirm" });
             if (registrationModel.Email == null)
                 errors.Add(new ErrorDescription { Error = "validation.Missing", Attribute = "email" });
             else if (registrationModel.Email.Length > 100 || !EmailParser.IsMatch(registrationModel.Email))

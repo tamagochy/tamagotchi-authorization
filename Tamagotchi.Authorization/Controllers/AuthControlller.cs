@@ -87,13 +87,13 @@ namespace Tamagotchi.Authorization.Controllers
             }
             catch
             {
-                HttpContext.Response.StatusCode = 500;
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<string>(
                     new List<Error>
                     {
                         new Error
                         {
-                            Code = "server.Error"
+                            Code = "business.UserNotFound"
                         }
                     }
                 );
@@ -130,6 +130,7 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("getUserLogins")]
         public async Task<ApiResult<dynamic>> GetUserLogins([FromBody] JArray idsArray)
         {
+            var validationResult = ValidateUserIds(idsArray);
             if (idsArray == null)
             {
                 HttpContext.Response.StatusCode = 400;
@@ -145,7 +146,6 @@ namespace Tamagotchi.Authorization.Controllers
             }
             try
             {
-                var validationResult = ValidateUserIds(idsArray);
                 if (validationResult.Item2.Any())
                 {
                     HttpContext.Response.StatusCode = 400;
@@ -187,15 +187,17 @@ namespace Tamagotchi.Authorization.Controllers
             }
             catch
             {
-                HttpContext.Response.StatusCode = 500;
-                return new ApiResult<dynamic>(
-                    new List<Error>
+                HttpContext.Response.StatusCode = 400;
+                var apiResult = new ApiResult<string> { Errors = new List<Error>() };
+                foreach (var error in validationResult.Item2)
+                {
+                    apiResult.Errors.Add(new Error
                     {
-                        new Error
-                        {
-                            Code = "server.Error"
-                        }
+                        Attr = error.Attribute,
+                        Code = error.Error
                     });
+                }
+                return new ApiResult<dynamic>(apiResult);
             }
         }
 
@@ -206,74 +208,73 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("registration")]
         public async Task<ApiResult<dynamic>> Registration([FromBody] JObject registrationModel)
         {
-            if (registrationModel == null)
+            try
             {
-                HttpContext.Response.StatusCode = 400;
-                return new ApiResult<dynamic>(
-                    new List<Error>
-                    {
+                if (registrationModel == null)
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<dynamic>(
+                        new List<Error>
+                        {
                         new Error
                         {
                             Code = "protocol.Incorrect"
                         }
-                    }
-                );
-            }
-            var validationResult = ValidateRegistrationModel(registrationModel);
-            if (validationResult.Item2.Any())
-            {
-                HttpContext.Response.StatusCode = 400;
-                var apiResult = new ApiResult<dynamic> { Errors = new List<Error>() };
-                foreach (var error in validationResult.Item2)
-                {
-                    apiResult.Errors.Add(new Error
-                    {
-                        Attr = error.Attribute,
-                        Code = error.Error
-                    });
+                        }
+                    );
                 }
-                return apiResult;
-            }
-            if (!ModelState.IsValid)
-            {
-                HttpContext.Response.StatusCode = 400;
-                return new ApiResult<dynamic>(
-                    new List<Error>
+                var validationResult = ValidateRegistrationModel(registrationModel);
+                if (validationResult.Item2.Any())
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    var apiResult = new ApiResult<dynamic> { Errors = new List<Error>() };
+                    foreach (var error in validationResult.Item2)
                     {
+                        apiResult.Errors.Add(new Error
+                        {
+                            Attr = error.Attribute,
+                            Code = error.Error
+                        });
+                    }
+                    return apiResult;
+                }
+                if (!ModelState.IsValid)
+                {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<dynamic>(
+                        new List<Error>
+                        {
                         new Error
                         {
                             Code = "protocol.Incorrect"
                         }
-                    }
-                );
-            }
-            if (!validationResult.Item1.Password.Equals(validationResult.Item1.PasswordConfirm))
-            {
-                HttpContext.Response.StatusCode = 400;
-                return new ApiResult<dynamic>(
-                new List<Error>
+                        }
+                    );
+                }
+                if (!validationResult.Item1.Password.Equals(validationResult.Item1.PasswordConfirm))
                 {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<dynamic>(
+                    new List<Error>
+                    {
                     new Error
                     {
                         Code = "business.PasswordsNotEquals"
                     }
-                });
-            }
-            if ((await _userRepository.GetUserByEmail(validationResult.Item1.Email) != null) ||
-                    (await _userRepository.GetUserByLogin(validationResult.Item1.Login) != null))
-            {
-                HttpContext.Response.StatusCode = 400;
-                return new ApiResult<dynamic>(
-                new List<Error>
+                    });
+                }
+                if (await _userRepository.CheckExistsUser(validationResult.Item1.Login.ToLower(), validationResult.Item1.Email.ToLower()))
                 {
-                    new Error
-                     {
-                         Code = "business.UserAlreadyExists"
-                     }
-                });
-            }
-            try
-            {
+                    HttpContext.Response.StatusCode = 400;
+                    return new ApiResult<dynamic>(
+                    new List<Error>
+                    {
+                        new Error
+                        {
+                             Code = "business.UserAlreadyExists"
+                        }
+                    });
+                }
                 await _userRepository.AddUser(
                     new User
                     {
@@ -284,15 +285,15 @@ namespace Tamagotchi.Authorization.Controllers
             }
             catch
             {
-                HttpContext.Response.StatusCode = 500;
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<dynamic>(
-                new List<Error>
-                {
-                    new Error
+                    new List<Error>
                     {
-                        Code = "server.Error"
-                    }
-                });
+                        new Error
+                        {
+                            Code = "business.UserNotFound"
+                        }
+                    });
             }
             return new ApiResult<dynamic>(new { succeed = true });
         }
@@ -354,13 +355,13 @@ namespace Tamagotchi.Authorization.Controllers
             }
             catch
             {
-                HttpContext.Response.StatusCode = 500;
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<dynamic>(
                     new List<Error>
                     {
                         new Error
                         {
-                            Code = "server.Error"
+                            Code = "business.UserNotFound"
                         }
                     });
             }
@@ -420,6 +421,7 @@ namespace Tamagotchi.Authorization.Controllers
         [HttpPost("restoreAccessConfirm")]
         public async Task<ApiResult<dynamic>> RestoreAccessConfirm([FromBody] JObject recoveryPasswordModel)
         {
+            var validationResult = ValidateRestoreAccessModel(recoveryPasswordModel);
             if (recoveryPasswordModel == null)
             {
                 HttpContext.Response.StatusCode = 400;
@@ -435,7 +437,6 @@ namespace Tamagotchi.Authorization.Controllers
             }
             try
             {
-                var validationResult = ValidateRestoreAccessModel(recoveryPasswordModel);
                 if (validationResult.Item2.Any())
                 {
                     HttpContext.Response.StatusCode = 400;
@@ -503,7 +504,7 @@ namespace Tamagotchi.Authorization.Controllers
                 var dateTimeNow = DateTime.UtcNow.Ticks;
                 var creationTime = confirmation.CreationTime.Ticks;
                 if (!(dateTimeNow >= creationTime && dateTimeNow <=
-                    creationTime + TimeSpan.FromHours(_appInfo.ConfirmCodeLifeTime).Ticks))
+                    creationTime + TimeSpan.FromMinutes(_appInfo.ConfirmCodeLifeTime).Ticks))
                 {
                     HttpContext.Response.StatusCode = 400;
                     return new ApiResult<dynamic>(
@@ -535,15 +536,16 @@ namespace Tamagotchi.Authorization.Controllers
             }
             catch
             {
-                HttpContext.Response.StatusCode = 500;
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResult<dynamic>(
                     new List<Error>
                     {
-                        new Error
-                        {
-                            Code = "server.Error"
-                        }
-                    });
+                            new Error
+                            {
+                                Code = "business.UserNotFound"
+                            }
+                    }
+                );
             }
         }
 

@@ -45,5 +45,11 @@ namespace Tamagotchi.Authorization.Core
             }
             return result;
         }
+
+        public async Task<bool> CheckExistsUser(string login, string mail)
+        {
+            var check = await _db.TamagotchiUser.FirstOrDefaultAsync(user => user.Login.Equals(login) || user.Email.Equals(mail));
+            return check != null;
+        }
     }
 }

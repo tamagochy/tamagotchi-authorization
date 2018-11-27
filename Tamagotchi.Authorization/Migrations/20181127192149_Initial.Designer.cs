@@ -10,7 +10,7 @@ using Tamagotchi.Authorization.Models;
 namespace Tamagotchi.Authorization.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20181126110001_Initial")]
+    [Migration("20181127192149_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

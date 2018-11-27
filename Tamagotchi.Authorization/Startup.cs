@@ -51,7 +51,7 @@ namespace Tamagotchi.Authorization
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            //UpdateDatabase(app);
+            UpdateDatabase(app);
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
