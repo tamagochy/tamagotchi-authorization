@@ -31,6 +31,13 @@ namespace Tamagotchi.Authorization
             services.AddDbContext<UserContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("LocalDB")));
             services.AddScoped<IConfirmationCodeRepository, ConfirmationCodeRepository>();
+            services.AddCors(o => o.AddPolicy("AuthPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader()
+                       .AllowCredentials();
+            }));
             var appInfo = Configuration.GetSection("AppInfo");
             services.AddSwaggerGen(c =>
             {
@@ -57,6 +64,7 @@ namespace Tamagotchi.Authorization
             app.UseAuthentication();
             app.UseDeveloperExceptionPage();
             app.UseMvc();
+            app.UseCors("AuthPolicy");
             // Enable middleware to serve generated Swagger as a JSON endpoint
             app.UseSwagger();
             //Enable middleware to serve swagger - ui assets(HTML, JS, CSS etc.)

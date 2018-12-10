@@ -41,11 +41,11 @@ namespace Tamagotchi.Authorization.Controllers
             registrationModel.Email = (string)requestParams["email"];
             if (registrationModel.Login == null)
                 errors.Add(new ErrorDescription { Error = "validation.Missing", Attribute = "login" });
-            if (registrationModel.Login.Length < 3 || registrationModel.Login.Length > 24)
+            else if (registrationModel.Login.Length < 3 || registrationModel.Login.Length > 24)
                 errors.Add(new ErrorDescription { Error = "validation.Incorrect", Attribute = "login" });
             if (registrationModel.Password == null)
                 errors.Add(new ErrorDescription { Error = "validation.Missing", Attribute = "password" });
-            if (registrationModel.Password.Length < 8 || registrationModel.Password.Length > 24)
+            else if (registrationModel.Password.Length < 8 || registrationModel.Password.Length > 24)
                 errors.Add(new ErrorDescription { Error = "validation.Incorrect", Attribute = "password" });
             if (registrationModel.PasswordConfirm == null)
                 errors.Add(new ErrorDescription { Error = "validation.Missing", Attribute = "passwordConfirm" });

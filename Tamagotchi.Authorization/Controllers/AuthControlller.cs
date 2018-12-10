@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,6 +18,7 @@ namespace Tamagotchi.Authorization.Controllers
 {
     [Consumes("application/json")]
     [Produces("application/json")]
+    [EnableCors("AuthPolicy")]
     public class AuthController : AuthControllerBase
     {
         private readonly IUserRepository _userRepository;
@@ -259,11 +261,12 @@ namespace Tamagotchi.Authorization.Controllers
                     {
                     new Error
                     {
-                        Code = "business.PasswordsNotEquals"
+                        Code = "business.Error"
                     }
                     });
                 }
-                if (await _userRepository.CheckExistsUser(validationResult.Item1.Login.ToLower(), validationResult.Item1.Email.ToLower()))
+                var lowerCaseEmail = validationResult.Item1.Email.ToLower();
+                if (await _userRepository.CheckExistsUser(validationResult.Item1.Login, lowerCaseEmail))
                 {
                     HttpContext.Response.StatusCode = 400;
                     return new ApiResult<dynamic>(
@@ -280,7 +283,7 @@ namespace Tamagotchi.Authorization.Controllers
                     {
                         Login = validationResult.Item1.Login,
                         Password = validationResult.Item1.Password,
-                        Email = validationResult.Item1.Email
+                        Email = lowerCaseEmail
                     }, _appInfo.CountRound);
             }
             catch
@@ -295,6 +298,7 @@ namespace Tamagotchi.Authorization.Controllers
                         }
                     });
             }
+            HttpContext.Response.StatusCode = 201;
             return new ApiResult<dynamic>(new { succeed = true });
         }
 
@@ -351,7 +355,7 @@ namespace Tamagotchi.Authorization.Controllers
             {
                 user = await _userRepository.GetUserByLogin(validationResult.Item1.UserIdentityData);
                 if (user == null)
-                    user = await _userRepository.GetUserByEmail(validationResult.Item1.UserIdentityData);
+                    user = await _userRepository.GetUserByEmail(validationResult.Item1.UserIdentityData.ToLower());
             }
             catch
             {
@@ -485,7 +489,7 @@ namespace Tamagotchi.Authorization.Controllers
                         {
                             new Error
                             {
-                                Code = "business.ConfirmCodeNotFound"
+                                Code = "business.Error"
                             }
                         });
                 }
@@ -504,7 +508,7 @@ namespace Tamagotchi.Authorization.Controllers
                 var dateTimeNow = DateTime.UtcNow.Ticks;
                 var creationTime = confirmation.CreationTime.Ticks;
                 if (!(dateTimeNow >= creationTime && dateTimeNow <=
-                    creationTime + TimeSpan.FromMinutes(_appInfo.ConfirmCodeLifeTime).Ticks))
+                    creationTime + TimeSpan.FromSeconds(_appInfo.ConfirmCodeLifeTime).Ticks))
                 {
                     HttpContext.Response.StatusCode = 400;
                     return new ApiResult<dynamic>(
