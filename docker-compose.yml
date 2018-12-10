@@ -1,0 +1,38 @@
+version: '3.4'
+services:
+  db:
+    image: postgres:10.5
+    restart: always
+    ports:
+    - "5432:5432"
+    environment:
+      POSTGRES_DB: tamagotchi
+      POSTGRES_PASSWORD: root
+    volumes:
+    - "postgres-data-auth:/var/lib/postgresql/data"
+
+  app:
+    image: itine/tamagotchi-authorization
+    restart: always
+    ports:
+    - "5001:80"
+    environment:
+      AppInfo__ProjectVersion: '1.1.3'
+      AppInfo__ApplicationEmail: 'tamagotchi.vlsu@gmail.com'
+      AppInfo__EmailPassword: 'istm.prim.2018'
+      AppInfo__ApplicationUrl: 'tama.gotchi'
+      AppInfo__CountRound: '4'
+      AppInfo__LifeTimeToken: '24'
+      AppInfo__ConfirmCodeLifeTime: '300'
+      AppInfo__SecretKey: 'TamagotchiSecretKey'
+    depends_on:
+    - db
+  
+  adminer:
+    image: adminer:4
+    restart: always
+    ports:
+    - "9999:8080"
+volumes:
+  postgres-data-auth:
+    driver: local

@@ -325,3 +325,4 @@ ASALocalRun/
 
 # MSBuild Binary and Structured Log
 *.binlog
+BetInAction\.SportsBook\.WebApp\.Backend/logs/RequestLogs\.txt
