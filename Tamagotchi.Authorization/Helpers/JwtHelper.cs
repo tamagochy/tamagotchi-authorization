@@ -10,11 +10,13 @@ namespace Tamagotchi.Authorization.Helpers
     {
         public static string GenerateToken(int userId, string secretKey, int lifeTime)
         {
-            var claims = new[] { new Claim("user_id", userId.ToString(), ClaimValueTypes.Integer) };
+            var claims = new[] { new Claim("user_id", $"{userId}", ClaimValueTypes.Integer) };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var signInCredential = new SigningCredentials(key, "HS256");
+            var signInCredential = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var dateNow = DateTime.UtcNow;
             var token = new JwtSecurityToken(
+                issuer: "tama.gotchi",
+                audience: "tama.gotchi",
                 notBefore: dateNow,
                 expires: dateNow.Add(TimeSpan.FromHours(lifeTime)),
                 claims: claims,
